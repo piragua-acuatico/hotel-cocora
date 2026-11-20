@@ -311,6 +311,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
     blancoCama: new THREE.MeshLambertMaterial({ color: '#fbf8f2' }),
     cobija: new THREE.MeshLambertMaterial({ color: '#b5462f' }),
     tronco: new THREE.MeshLambertMaterial({ color: '#d9d6cc' }),
+    terracota: new THREE.MeshLambertMaterial({ color: '#b5532f' }),
     hoja: new THREE.MeshLambertMaterial({ color: '#4b7d2f', side: THREE.DoubleSide }),
     montana: new THREE.MeshLambertMaterial({ color: '#3f6b3a', flatShading: true }),
     montana2: new THREE.MeshLambertMaterial({ color: '#5a8150', flatShading: true }),
@@ -451,6 +452,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
     const g = h.piso === 1 ? piso1 : piso2, y = h.y, t = .14;
     const { x0, x1, z0, z1 } = h;
     const mColor = matColor(h.color);
+    const n0 = Number(h.num) % 4;
     // suelo interior
     caja(g, mat.baldosa, x0, x1, y - .02, y + .02, z0, z1, 1.2);
     // paredes: determina cuál lado da a la galería (puerta) y cuál al exterior (ventana)
@@ -502,6 +504,19 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
       plano(cw - 1.2, cw + 1.2, -.1, .05, 0, .8, mat.madera);
       plano(cw - 1.2, cw + 1.2, .95, 1.05, .76, .82, mColor);
       for (let i = 0; i <= 8; i++) { const a = cw - 1.2 + i * .3; plano(a - .025, a + .025, .05, .95, .77, .81, mColor); }
+      // materas con flores colgadas de la baranda (muy típico de Salento)
+      for (const a of [cw - .8, cw + .8]) {
+        plano(a - .16, a + .16, .7, 1.0, .84, 1.08, mat.terracota);
+        const centro = new THREE.Vector3(enX ? a : fijo + .96 * hacia, y + 1.12, enX ? fijo + .96 * hacia : a);
+        const mata = new THREE.Mesh(new THREE.IcosahedronGeometry(.2, 0), matColor('#3c7a35')); mata.position.copy(centro); g.add(mata);
+        for (let k = 0; k < 4; k++) {
+          const fl = new THREE.Mesh(new THREE.IcosahedronGeometry(.07, 0), matColor(['#e84a6f', '#c62f4a', '#f2c230', '#ffffff'][(k + n0) % 4]));
+          fl.position.copy(centro).add(new THREE.Vector3(Math.cos(k * 1.7) * .17, .05 + (k % 2) * .08, Math.sin(k * 1.7) * .17)); g.add(fl);
+        }
+        // helecho que cuelga
+        const colg = new THREE.Mesh(new THREE.ConeGeometry(.14, .55, 5), matColor('#4f8a3c'));
+        colg.position.copy(centro).add(new THREE.Vector3(enX ? 0 : .1 * hacia, -.55, enX ? .1 * hacia : 0)); colg.rotation.x = Math.PI; g.add(colg);
+      }
     }
     // cama y mesa de noche
     const dentro = {

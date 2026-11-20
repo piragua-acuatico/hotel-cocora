@@ -92,6 +92,23 @@ const anillo = new THREE.Mesh(new THREE.RingGeometry(.55, .8, 32), new THREE.Mes
 anillo.rotation.x = -Math.PI / 2;
 scene.add(haz, anillo);
 
+// Aves que planean en círculos sobre el hotel (ambiente)
+const aves = Array.from({ length: 6 }, (_, i) => {
+  const g = new THREE.Group(), m = new THREE.MeshBasicMaterial({ color: '#2a2a2a', side: THREE.DoubleSide });
+  const ala = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0, 0, -.15), new THREE.Vector3(0, 0, .15), new THREE.Vector3(.9, 0, 0)]);
+  const izq = new THREE.Mesh(ala, m), der = new THREE.Mesh(ala, m); der.scale.x = -1;
+  g.add(izq, der); g.userData = { izq, der, r: 12 + i * 4, h: 14 + (i % 3) * 4, v: .18 + (i % 2) * .08, f: i * 1.3, cx: i % 2 ? 0 : 6, cz: i % 2 ? 0 : 14 };
+  scene.add(g); return g;
+});
+function animarAves(t) {
+  for (const a of aves) {
+    const u = a.userData, ang = t * u.v + u.f;
+    a.position.set(u.cx + Math.cos(ang) * u.r, u.h + Math.sin(t * .7 + u.f) * 1.5, u.cz + Math.sin(ang) * u.r);
+    a.rotation.y = -ang;
+    const b = Math.sin(t * 7 + u.f) * .5; u.izq.rotation.z = b; u.der.rotation.z = -b;
+  }
+}
+
 // Recepcionista detrás del mostrador: saluda al huésped por su nombre cuando pasa cerca
 const recepcionista = (() => {
   const g = new THREE.Group();
@@ -603,6 +620,7 @@ function avanzar(dt) {
     camara.lookAt(0, 3, 0);
   }
   hotel.animar(dt);
+  animarAves(t);
   renderer.render(scene, camara);
 }
 cuadro();
