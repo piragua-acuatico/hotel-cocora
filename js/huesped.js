@@ -1,7 +1,7 @@
 // Celular del huésped: se abre al acercar la tarjeta NFC (index.html?t=1).
 // Llave inactiva hasta que recepción la asigna → bienvenida → recorrido en primera persona →
 // a más de 30 m: indicaciones generales; a 30 m o menos: el loro orejiamarillo guía hasta la puerta → abrir → check-in.
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 import { construirHotel, ambiente, mover, prepararDestino, ruta, OJOS, H, regionEn } from './hotel.js';
 import { cargarModelo } from './modelo.js';
 import { mapaHabitaciones, HAB_SUGERIDA, nombreAla } from './datos.js';

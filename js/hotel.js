@@ -1,7 +1,7 @@
 // Hotel Valle de Cocora en 3D: casa de estilo colonial de Salento con patio central, galerías de madera,
 // 38 habitaciones en dos pisos (capacidad real del caso), palmas de cera y montañas con neblina.
 // Este módulo define a la vez la geometría (lo que se ve) y la navegación (por dónde se puede caminar).
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 import { mergeGeometries } from './vendor/BufferGeometryUtils.js';
 
 export const H = 3.6;            // altura de cada piso

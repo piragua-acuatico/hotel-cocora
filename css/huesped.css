@@ -34,7 +34,8 @@ button.sec { background: transparent; color: var(--crema); border: 1px solid #ff
 .ficha .hab { display: flex; justify-content: space-between; align-items: baseline; border-bottom: 1px dashed #e0d2b4; padding-bottom: 8px; margin-bottom: 6px; }
 .ficha .hab b { font-family: Fraunces, Georgia, serif; font-size: 40px; color: #0f5b32; }
 .ficha span { color: var(--suave); font-size: 13.5px; }
-.ficha .fila { display: flex; justify-content: space-between; padding: 3px 0; font-size: 14.5px; }
+.ficha .fila { display: flex; justify-content: space-between; gap: 14px; padding: 3px 0; font-size: 14.5px; }
+.ficha .fila b { text-align: right; }
 .exito .check { width: 72px; height: 72px; margin: 0 auto; border-radius: 50%; background: #0f5b32; color: #fff; font-size: 42px; display: grid; place-items: center; animation: late 1s ease-out; }
 @keyframes late { 0% { transform: scale(.3); } 60% { transform: scale(1.15); } }
 

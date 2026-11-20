@@ -1,6 +1,6 @@
 // Loro orejiamarillo (Ognorhynchus icterotis), ave emblema del Valle de Cocora que anida en la palma de cera.
 // Modelo low-poly hecho con primitivas: cuerpo verde, mejillas amarillas, pico oscuro, alas que aletean.
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 
 export function crearLoro() {
   const verde = new THREE.MeshLambertMaterial({ color: '#2f9e44', flatShading: true });

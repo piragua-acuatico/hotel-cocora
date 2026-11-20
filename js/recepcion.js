@@ -1,6 +1,6 @@
 // Pantalla de recepción (proyector): hotel 3D con el semáforo de riesgo, llaves NFC, avatar del huésped en vivo
 // y las tres decisiones de la gerencia (P1 sobreventa, P2 depósito, P3 política por canal).
-import * as THREE from 'three';
+import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { construirHotel, ambiente, H, prepararDestino, ruta } from './hotel.js';
 import { cargarModelo, probabilidad, nivel, factores, dinero, sobreventa } from './modelo.js';
@@ -153,6 +153,7 @@ function actualizarDecisiones() {
 
   // Realidad
   $('#revelar').classList.toggle('on', estado.revelar);
+  document.body.classList.toggle('realidad', estado.revelar);
   $('#revelar').textContent = estado.revelar ? 'Ocultar la realidad' : 'Revelar qué pasó en la realidad';
   if (estado.revelar) {
     const reales = base.filter(r => r.cancelada).length;
@@ -251,10 +252,14 @@ function publicar() { sync.enviar('estado', { asignaciones: estado.asignaciones,
 function cambiar() { estado.v++; guardar(); publicar(); pintar(); }
 setInterval(publicar, 4000);
 
+const ultimoHola = {};
 sync.on('hola', ({ t }) => {
   publicar();
   vivos[t] = { ...(vivos[t] || {}), leida: true, t: Date.now() };
   const a = estado.asignaciones[t];
+  const clave = t + (a ? a.desde : 'x');
+  if (ultimoHola[clave] && Date.now() - ultimoHola[clave] < 30000) { dibujarTarjetas(); return; }
+  ultimoHola[clave] = Date.now();
   if (a) aviso(`📱 Llave ${t} leída`, `${escapar(a.nombre)} abrió su llave en el celular.`, COLORES.bajo);
   else aviso(`📱 Llave ${t} leída`, 'La llave está inactiva: actívala para asignarle una habitación.', COLORES.libre);
   sonido('ping');
