@@ -426,7 +426,9 @@ $('#btn-qr').addEventListener('click', () => {
 $('#modal-qr').addEventListener('click', e => { if (e.target.dataset.cerrar !== undefined || e.target.id === 'modal-qr') $('#modal-qr').hidden = true; });
 $('#btn-simular').addEventListener('click', () => {
   const s = $('#celular-sim');
-  if (s.hidden) { $('#sim-frame').src = `index.html?t=1&sim=1`; s.hidden = false; }
+  // usa una llave que no esté en uso por un celular real (para no duplicar al huésped en el proyector)
+  const libre = TARJETAS.find(t => estado.asignaciones[t] && !(vivos[t] && Date.now() - vivos[t].t < 10000)) || TARJETAS.find(t => !(vivos[t] && Date.now() - vivos[t].t < 10000)) || '2';
+  if (s.hidden) { $('#sim-frame').src = `index.html?t=${libre}&sim=1`; s.hidden = false; aviso(`Celular simulado con la llave ${libre}`, 'Úsalo como plan B si la tarjeta o el celular fallan.', COLORES.libre); }
   else { s.hidden = true; $('#sim-frame').src = 'about:blank'; }
 });
 $('[data-cerrar-sim]').addEventListener('click', () => { $('#celular-sim').hidden = true; $('#sim-frame').src = 'about:blank'; });
