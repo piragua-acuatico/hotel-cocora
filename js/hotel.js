@@ -284,7 +284,7 @@ export function textoTextura(lineas, { ancho = 512, alto = 256, fondo = '#f4efe4
 }
 
 // ---------------------------------------------------------------- construcción
-export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {}) {
+export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', sombras = false } = {}) {
   const L = crearLayout();
   const recep = modo === 'recepcion';
   const HM = recep ? 1.3 : H; // en recepción las paredes se cortan como en una maqueta
@@ -704,12 +704,23 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     const geo = mergeGeometries(geos, false);
     geos.forEach(g => g.dispose());
     const m = new THREE.Mesh(geo, material); m.matrixAutoUpdate = false; m.updateMatrix();
+    if (sombras && !material.transparent) { m.castShadow = true; m.receiveShadow = true; }
     grupo.add(m);
   }
 
   // --- luces y ambiente
   const cielo = new THREE.HemisphereLight('#dfeefa', '#5a6b3a', 1.15); scene.add(cielo);
   const sol = new THREE.DirectionalLight('#fff1d6', 1.6); sol.position.set(-40, 70, 50); scene.add(sol);
+  if (sombras) {
+    sol.castShadow = true;
+    sol.shadow.mapSize.set(2048, 2048);
+    Object.assign(sol.shadow.camera, { left: -75, right: 75, top: 60, bottom: -60, near: 10, far: 220 });
+    sol.shadow.bias = -0.0006; sol.shadow.normalBias = .04;
+    sol.target.position.set(10, 0, 0); scene.add(sol.target);
+    suelo.receiveShadow = true;
+    raiz.traverse(o => { if (o.isMesh && !o.material.transparent && o !== suelo) { o.castShadow = true; o.receiveShadow = o.receiveShadow || o.geometry.type !== 'IcosahedronGeometry'; } });
+    exterior.traverse(o => { if (o.isMesh && o.material === nube) { o.castShadow = false; o.receiveShadow = false; } }); // nubes sin sombra
+  }
   const relleno = new THREE.DirectionalLight('#cfe2ff', .45); relleno.position.set(50, 30, -40); scene.add(relleno);
 
   // --- API

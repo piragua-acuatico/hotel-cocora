@@ -37,7 +37,8 @@ const controles = new OrbitControls(camara, lienzo);
 controles.target.set(SEPARA / 2, 0, 2);
 controles.enableDamping = true; controles.maxPolarAngle = Math.PI * .47; controles.minDistance = 18; controles.maxDistance = 170;
 
-const hotel = construirHotel(scene, { modo: 'recepcion', calidad: 'alta' });
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+const hotel = construirHotel(scene, { modo: 'recepcion', calidad: 'alta', sombras: true });
 const L = hotel.L;
 const mapa = mapaHabitaciones(L.habitaciones, noche.reservas);
 
