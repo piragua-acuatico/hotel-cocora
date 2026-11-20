@@ -62,7 +62,7 @@ const vuelo = { activo: false, t: 0, desde: null, qDesde: null };
 let estadoRecibido = false;
 
 function guardarSesion() {
-  try { localStorage.setItem(CLAVE, JSON.stringify({ hab, pos: { x: yo.x, y: yo.y, z: yo.z, yaw: yo.yaw }, puertaAbierta, t: Date.now() })); } catch (e) { /* nada */ }
+  try { localStorage.setItem(CLAVE, JSON.stringify({ hab, desde: asignacion && asignacion.desde, pos: { x: yo.x, y: yo.y, z: yo.z, yaw: yo.yaw }, puertaAbierta, t: Date.now() })); } catch (e) { /* nada */ }
 }
 function leerSesion() { try { return JSON.parse(localStorage.getItem(CLAVE)); } catch (e) { return null; } }
 
@@ -115,7 +115,7 @@ function prepararLlave(a) {
 
   // ¿Vuelve a acercar la tarjeta? Retoma el recorrido donde iba (y abre la puerta si está frente a ella)
   const s = leerSesion();
-  if (s && s.hab === hab && Date.now() - s.t < 3 * 3600e3 && s.pos) {
+  if (s && s.hab === hab && s.desde === a.desde && Date.now() - s.t < 3 * 3600e3 && s.pos) {
     Object.assign(yo, { x: s.pos.x, y: s.pos.y, z: s.pos.z, yaw: s.pos.yaw });
     puertaAbierta = !!s.puertaAbierta || checkinHecho;
     if (puertaAbierta) abrirPuerta(true);
