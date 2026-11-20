@@ -7,7 +7,7 @@ import { cargarModelo } from './modelo.js';
 import { mapaHabitaciones, HAB_SUGERIDA, nombreAla } from './datos.js';
 import { crearSync } from './sync.js';
 import { crearLoro } from './loro.js';
-import { sonido, desbloquearAudio } from './audio.js';
+import { sonido, desbloquearAudio, vibrar } from './audio.js';
 
 const $ = s => document.querySelector(s);
 const params = new URLSearchParams(location.search);
@@ -19,7 +19,11 @@ const UMBRAL = 30;
 const mostrar = id => { document.querySelectorAll('.pantalla').forEach(p => { p.hidden = p.id !== id; }); };
 
 if (!T) {
-  $('#carga-txt').innerHTML = 'Esta es la llave digital del hotel. Ábrela acercando la tarjeta NFC al celular.<br><br><a href="recepcion.html" style="color:#d9b45a">Ir a la pantalla de recepción →</a>';
+  $('#carga-txt').innerHTML = 'Demo del proyecto final de Programación Aplicada: análisis de cancelaciones con un hotel en 3D y llaves NFC.'
+    + '<br><br><a class="boton" href="recepcion.html">Abrir la recepción (proyector)</a>'
+    + '<a class="boton sec" href="?t=2">Probar una llave de ejemplo</a>'
+    + '<br><small>La llave real se abre acercando la tarjeta NFC al celular.</small>';
+  document.querySelector('.llave-anim').style.animation = 'none';
   throw new Error('sin tarjeta');
 }
 
@@ -222,7 +226,7 @@ function abrirPuerta(silencioso = false) {
   $('#hoja-puerta').hidden = true;
   guardarSesion();
   if (silencioso) return;
-  sonido('clic');
+  sonido('clic'); vibrar([30, 60, 120]);
   setTimeout(() => sonido('exito'), 450);
   enviarCheckin();
   setTimeout(() => { mostrar('p-final'); confeti(); }, 1600);
@@ -276,7 +280,8 @@ function actualizarGuia(dt) {
   if (puertaAbierta && d < 2.4) modo = 'adentro';
 
   if (modo !== modoPrevio) {
-    if (modo === 'cerca' && modoPrevio === 'general') { sonido('loro'); avisar('🦜 ¡Sigue al loro orejiamarillo!'); aparecerLoro(); }
+    if (modo === 'cerca' && modoPrevio === 'general') { sonido('loro'); vibrar([70, 50, 70]); avisar('🦜 ¡Sigue al loro orejiamarillo!'); aparecerLoro(); }
+    if (modo === 'puerta') vibrar(40);
     if (modo === 'cerca' && !loro.grupo.visible) aparecerLoro();
     if (modo === 'general') loro.grupo.visible = false;
     $('#guia').classList.toggle('cerca', modo !== 'general');
@@ -403,8 +408,29 @@ function redimensionar() {
 }
 addEventListener('resize', redimensionar); redimensionar();
 
+// Rendimiento adaptativo: si el celular va lento, baja la resolución interna
+const rend = { suma: 0, n: 0, nivel: 0 };
+function vigilarRendimiento(dt) {
+  if (document.hidden || dt <= 0) return;
+  rend.suma += dt; rend.n++;
+  if (rend.n < 90) return;
+  const fps = rend.n / rend.suma; rend.suma = 0; rend.n = 0;
+  if (fps < 26 && rend.nivel < 2) {
+    rend.nivel++;
+    renderer.setPixelRatio(rend.nivel === 1 ? 1 : .75);
+    redimensionar();
+  }
+}
+renderer.domElement.addEventListener('webglcontextlost', e => {
+  e.preventDefault();
+  avisar('El celular pausó el 3D: recarga la página');
+});
+let acumAve = 0;
 function cuadro() {
-  avanzar(Math.min(reloj.getDelta(), .05));
+  const dtReal = reloj.getDelta();
+  vigilarRendimiento(dtReal);
+  if (enRecorrido) { acumAve += dtReal; if (acumAve > 9 + Math.random() * 8) { acumAve = 0; if (modo === 'general') sonido('pajaro'); } }
+  avanzar(Math.min(dtReal, .05));
   if (document.hidden) setTimeout(cuadro, 100); else requestAnimationFrame(cuadro);
 }
 function avanzar(dt) {

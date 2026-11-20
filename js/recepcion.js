@@ -391,6 +391,9 @@ $('#btn-reiniciar').addEventListener('click', () => {
   sync.enviar('reinicio', {});
   cambiar(); seleccionar(null);
 });
+$('#btn-completa').addEventListener('click', () => {
+  if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
+});
 $('#btn-qr').addEventListener('click', () => {
   $('#qrs').innerHTML = TARJETAS.map(t => {
     const q = qrcode(0, 'M'); q.addData(`${URL_PUBLICA}?t=${t}`); q.make();
@@ -441,6 +444,7 @@ addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 'q') $('#btn-qr').click();
   if (e.key.toLowerCase() === 's') $('#btn-simular').click();
   if (e.key.toLowerCase() === 'r') $('#revelar').click();
+  if (e.key.toLowerCase() === 'f') $('#btn-completa').click();
   if (e.key === 'Escape') { $('#modal-qr').hidden = true; seleccionar(seleccion); }
 });
 

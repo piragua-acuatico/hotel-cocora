@@ -21,4 +21,10 @@ export function sonido(nombre) {
   if (nombre === 'clic') { tono(220, 120, .06, 'square', .12); tono(500, 300, .05, 'square', .1, .09); }
   if (nombre === 'exito') { [523, 659, 784, 1047].forEach((f, i) => tono(f, f, .35, 'triangle', .12, i * .11)); }
   if (nombre === 'cerca') { tono(660, 990, .25, 'sine', .1); }
+  if (nombre === 'pajaro') { // canto corto de ave, para ambiente
+    const f = 2200 + Math.random() * 1400;
+    for (let i = 0; i < 2 + (Math.random() * 3 | 0); i++) tono(f, f * (.7 + Math.random() * .2), .08, 'sine', .025, i * .13);
+  }
 }
+
+export function vibrar(patron) { try { if (navigator.vibrate) navigator.vibrate(patron); } catch (e) { /* sin vibración */ } }
