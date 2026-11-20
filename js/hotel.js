@@ -58,7 +58,7 @@ export function crearLayout() {
   const obstaculos = [
     { x: 0, z: 0, r: 2.5, y: 0 },
     { x: 7, z: 4.5, r: 1.2, y: 0 }, { x: -7, z: 4.5, r: 1.2, y: 0 }, { x: 7, z: -4.5, r: 1.2, y: 0 }, { x: -7, z: -4.5, r: 1.2, y: 0 },
-    { rect: [3, 8, 13.4, 14.6], y: 0 }, // mostrador de recepción
+    { rect: [2, 7, 13.4, 14.6], y: 0 }, // mostrador de recepción
   ];
   for (const piso of [1, 2]) for (const c of columnas()) obstaculos.push({ x: c.x, z: c.z, r: 0.32, y: (piso - 1) * H });
   for (const p of palmasPlaza()) obstaculos.push({ x: p.x, z: p.z, r: 0.6, y: 0 });
@@ -582,10 +582,10 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
     muro(g, mat.pared, 10, 10.12, y, y + H, 11, 16);
   }
   // mostrador de recepción
-  caja(piso1, mat.madera, 3, 8, 0, 1.1, 13.4, 14.6);
-  caja(piso1, mat.maderaClara, 2.9, 8.1, 1.1, 1.18, 13.3, 14.7);
+  caja(piso1, mat.madera, 2, 7, 0, 1.1, 13.4, 14.6);
+  caja(piso1, mat.maderaClara, 1.9, 7.1, 1.1, 1.18, 13.3, 14.7);
   const campana = new THREE.Mesh(new THREE.SphereGeometry(.09, 10, 6, 0, Math.PI * 2, 0, Math.PI / 2), matColor('#d4af37'));
-  campana.position.set(4, 1.18, 13.6); piso1.add(campana);
+  campana.position.set(3, 1.18, 13.6); piso1.add(campana);
   // letreros
   const letrero = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.1), new THREE.MeshBasicMaterial({
     map: textoTextura([{ t: 'HOTEL VALLE DE COCORA', fuente: 'bold 70px Georgia, serif' }], { ancho: 1024, alto: 160, fondo: '#2f5d43', color: '#f6e7c1', borde: '#d4af37' }),
@@ -596,7 +596,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
     m.position.set(x, y, z); m.rotation.y = ry; piso1.add(m); return m;
   };
   senal(['↑ Patio · Hab. 101–119', '← Escalera · Hab. 201–219'], 0, 2.6, 11.15, 0, 3.4);
-  senal(['Recepción'], 5.5, 2.4, 13.3, 0, 2);
+  senal(['Recepción'], 4.5, 2.5, 13.2, 0, 2);
   const s2 = senal(['Hab. 201–219', '↑ Galería'], -9.2, H + 2.5, 11.2, 0, 2.4); piso1.remove(s2); piso2.add(s2);
 
   // --- lámparas colgantes de la galería (puntos de luz cálida decorativos)

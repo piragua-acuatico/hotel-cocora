@@ -92,6 +92,43 @@ const anillo = new THREE.Mesh(new THREE.RingGeometry(.55, .8, 32), new THREE.Mes
 anillo.rotation.x = -Math.PI / 2;
 scene.add(haz, anillo);
 
+// Recepcionista detrás del mostrador: saluda al huésped por su nombre cuando pasa cerca
+const recepcionista = (() => {
+  const g = new THREE.Group();
+  const uniforme = new THREE.MeshLambertMaterial({ color: '#2f5d43' }), piel = new THREE.MeshLambertMaterial({ color: '#c99a74' });
+  const cuerpo = new THREE.Mesh(new THREE.CylinderGeometry(.24, .3, 1.1, 10), uniforme); cuerpo.position.y = 1.0;
+  const cabeza = new THREE.Mesh(new THREE.SphereGeometry(.17, 12, 10), piel); cabeza.position.y = 1.72;
+  const pelo = new THREE.Mesh(new THREE.SphereGeometry(.18, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2), new THREE.MeshLambertMaterial({ color: '#2b1d14' })); pelo.position.y = 1.75;
+  const panuelo = new THREE.Mesh(new THREE.ConeGeometry(.12, .16, 3), new THREE.MeshLambertMaterial({ color: '#d9b45a' })); panuelo.position.set(0, 1.47, .2); panuelo.rotation.x = Math.PI;
+  const brazo = new THREE.Group(); brazo.position.set(.3, 1.4, 0);
+  const b = new THREE.Mesh(new THREE.CylinderGeometry(.06, .06, .55, 6), uniforme); b.position.y = .25; brazo.add(b);
+  const mano = new THREE.Mesh(new THREE.SphereGeometry(.07, 8, 6), piel); mano.position.y = .55; brazo.add(mano);
+  g.add(cuerpo, cabeza, pelo, panuelo, brazo);
+  g.position.set(4.5, 0, 12.9);
+  scene.add(g);
+  L.obstaculos.push({ x: 4.5, z: 12.9, r: .45, y: 0 });
+  const c = document.createElement('canvas'); c.width = 512; c.height = 200;
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const globo = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false }));
+  globo.scale.set(2.3, .9, 1); globo.position.set(4.5, 2.75, 12.9); globo.visible = false; globo.renderOrder = 20; scene.add(globo);
+  return {
+    texto(l1, l2) {
+      const g2 = c.getContext('2d'); g2.clearRect(0, 0, 512, 200);
+      g2.fillStyle = '#fffdf6'; g2.strokeStyle = '#2f5d43'; g2.lineWidth = 6;
+      g2.beginPath(); g2.roundRect ? g2.roundRect(8, 8, 496, 150, 28) : g2.rect(8, 8, 496, 150); g2.fill(); g2.stroke();
+      g2.beginPath(); g2.moveTo(236, 156); g2.lineTo(256, 192); g2.lineTo(276, 156); g2.fill();
+      g2.fillStyle = '#2f5d43'; g2.textAlign = 'center'; g2.font = 'bold 40px Georgia, serif'; g2.fillText(l1, 256, 72);
+      g2.fillStyle = '#5b4a2a'; g2.font = '30px Georgia, serif'; g2.fillText(l2, 256, 124);
+      tex.needsUpdate = true;
+    },
+    animar(t, cerca) {
+      globo.visible = cerca;
+      brazo.rotation.z = cerca ? 2.4 + Math.sin(t * 8) * .35 : .1;
+      g.rotation.y = cerca ? Math.atan2(yo.x - 4.5, yo.z - 12.9) : 0;
+    },
+  };
+})();
+
 // ---------------------------------------------------------------- estado
 const yo = { x: 0, y: 0, z: 30, yaw: 0, pitch: -.03 };
 let asignacion = null, destino = null, hab = null, habDatos = null;
@@ -100,6 +137,7 @@ let modo = 'general', modoPrevio = null, ultimaRuta = null;
 const abiertas = [];
 const piloto = { activo: params.has('piloto') };
 const vuelo = { activo: false, t: 0, desde: null, qDesde: null };
+let saludoHecho = false;
 let estadoRecibido = false;
 
 function guardarSesion() {
@@ -158,6 +196,7 @@ function prepararLlave(a) {
   const rh = hotel.habitaciones.get(hab);
   if (!rh.farol.userData.propio) { rh.farol.material = rh.farol.material.clone(); rh.farol.userData.propio = true; }
   ponerNota(a.nombre);
+  recepcionista.texto(`¡Hola, ${a.nombre.slice(0, 16)}!`, `Tu habitación: ${hab} · ${habDatos.piso}.º piso`);
 
   // ¿Vuelve a acercar la tarjeta? Retoma el recorrido donde iba (y abre la puerta si está frente a ella)
   const s = leerSesion();
@@ -531,6 +570,9 @@ function avanzar(dt) {
     }
     actualizarGuia(dt);
     animarLoro(dt, t);
+    const cercaRecep = Math.hypot(yo.x - 4.5, yo.z - 13.6) < 8 && yo.y < 1;
+    recepcionista.animar(t, cercaRecep);
+    if (cercaRecep && !saludoHecho && yo.z < 16) { saludoHecho = true; sonido('ping'); avisar(`💬 Recepción: ¡Hola! Tu habitación es la ${hab} →`); }
     // haz de luz sobre la puerta cuando está cerca
     if (habDatos) {
       const objetivo = (modo === 'cerca' || modo === 'puerta') ? 1 : 0;
