@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hotel Valle de Cocora</title>
+<style>
+  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0f2a22;color:#f4efe4;font-family:system-ui,sans-serif;text-align:center}
+  h1{font-weight:600;margin:.2em 0} p{opacity:.8}
+  .ok{font-size:64px}
+</style>
+</head>
+<body>
+<main>
+  <div class="ok">✓</div>
+  <h1 id="t">Hotel Valle de Cocora</h1>
+  <p id="s">Página en construcción</p>
+</main>
+<script>
+  const t = new URLSearchParams(location.search).get('t');
+  if (t) { document.getElementById('t').textContent = 'Tarjeta ' + t + ' detectada'; document.getElementById('s').textContent = 'La tarjeta NFC funciona correctamente.'; }
+</script>
+</body>
+</html>

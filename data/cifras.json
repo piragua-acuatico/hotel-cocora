@@ -1,0 +1,22 @@
+{
+ "reservas_unicas": 100000,
+ "tasa_cancelacion": 0.19,
+ "ingreso_perdido": 15511141000.0,
+ "ingreso_potencial": 81693911000.0,
+ "tasa_sin_deposito": 0.2706,
+ "tasa_con_deposito": 0.0989,
+ "tasa_por_canal": {
+  "Agencia": 0.1438,
+  "Airbnb": 0.2229,
+  "Booking": 0.2688,
+  "Directo web": 0.0969,
+  "No registrado": 0.1936,
+  "Telefono": 0.1459
+ },
+ "tasa_por_politica": {
+  "Flexible": 0.263,
+  "Moderada": 0.1893,
+  "No reembolsable": 0.0275
+ },
+ "share_perdido_booking": 0.4732
+}
