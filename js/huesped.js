@@ -2,7 +2,7 @@
 // Llave inactiva hasta que recepción la asigna → bienvenida → recorrido en primera persona →
 // a más de 30 m: indicaciones generales; a 30 m o menos: el loro orejiamarillo guía hasta la puerta → abrir → check-in.
 import * as THREE from './vendor/three.module.js';
-import { construirHotel, ambiente, mover, prepararDestino, ruta, OJOS, H, regionEn } from './hotel.js';
+import { construirHotel, ambiente, mover, prepararDestino, ruta, OJOS, H, regionEn, crearLayout } from './hotel.js';
 import { cargarModelo } from './modelo.js';
 import { mapaHabitaciones, HAB_SUGERIDA, nombreAla } from './datos.js';
 import { crearSync } from './sync.js';
@@ -28,6 +28,47 @@ if (!T) {
 }
 
 const { noche } = await cargarModelo('');
+
+// ---------------------------------------------------------------- modo básico (sin 3D)
+// Si el celular no tiene WebGL2, la llave sigue funcionando: bienvenida, abrir la puerta y check-in en el proyector.
+const SIN3D = params.has('basico') || !(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch (e) { return false; } })();
+if (SIN3D) {
+  const Lb = crearLayout(), mapaB = mapaHabitaciones(Lb.habitaciones, noche.reservas);
+  const syncB = crearSync('huesped');
+  let aB = null, hecho = false, ultimo = 0;
+  const holaB = () => syncB.enviar('hola', { t: T });
+  syncB.alCambiarConexion(ok => { if (ok) holaB(); }); holaB();
+  const rep = setInterval(() => { if (!aB) holaB(); }, 2500);
+  $('#inactiva-num').textContent = `Llave ${T}`;
+  $('#btn-empezar').textContent = '🔑 Abrir mi habitación';
+  syncB.on('estado', e => {
+    if ((e.actualizado || 0) < ultimo) return; ultimo = e.actualizado || 0;
+    const a = e.asignaciones && e.asignaciones[T];
+    if (!a) { aB = null; mostrar('p-inactiva'); return; }
+    clearInterval(rep);
+    hecho = !!(e.checkins && e.checkins[a.hab]);
+    if (aB && aB.desde === a.desde) return;
+    aB = a;
+    const h = Lb.habitaciones.find(x => x.num === a.hab), r = mapaB[a.hab];
+    $('#bv-nombre').textContent = `¡Bienvenido, ${a.nombre}!`;
+    $('#bv-hab').textContent = a.hab;
+    $('#bv-ubic').textContent = `${h.piso}.º piso · ${nombreAla[h.ala]}`;
+    $('#bv-tipo').textContent = r ? r.tipo_habitacion : '—';
+    $('#bv-noches').textContent = r ? `${r.noches} noche${r.noches > 1 ? 's' : ''}` : '—';
+    $('#fin-hab').textContent = a.hab;
+    document.querySelector('#p-bienvenida .chico').textContent = 'Tu habitación te espera. Toca el botón para abrirla con tu llave.';
+    mostrar(hecho ? 'p-final' : 'p-bienvenida');
+  });
+  syncB.on('reinicio', () => location.reload());
+  $('#btn-empezar').addEventListener('click', () => {
+    if (!aB) return;
+    desbloquearAudio(); sonido('clic'); setTimeout(() => sonido('exito'), 400);
+    let n = 0; const enviar = () => { if (hecho || n++ > 12) return; syncB.enviar('checkin', { t: T, hab: aB.hab }); setTimeout(enviar, 2000); }; enviar();
+    mostrar('p-final');
+  });
+  $('#btn-seguir').hidden = true;
+  await new Promise(() => {}); // detiene aquí el módulo: no se carga el 3D
+}
 
 // ---------------------------------------------------------------- escena
 const lienzo = $('#lienzo');
