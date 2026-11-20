@@ -287,6 +287,9 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
   const raiz = new THREE.Group(); scene.add(raiz);
   const piso1 = new THREE.Group(), piso2 = new THREE.Group(), techo = new THREE.Group(), exterior = new THREE.Group();
   raiz.add(piso1, piso2, techo, exterior);
+  // En recepción, la parte alta de las paredes va aparte: se oculta en la vista de maqueta y se muestra en "Hotel completo"
+  const alto1 = new THREE.Group(), alto2 = new THREE.Group(); piso1.add(alto1); piso2.add(alto2);
+  const altoDe = g => g === piso1 ? alto1 : g === piso2 ? alto2 : g;
 
   const tBaldosa = texturaBaldosa(), tPiedra = texturaPiedra(), tPasto = texturaPasto(), tTeja = texturaTeja();
   const mat = {
@@ -328,6 +331,12 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     const k = grupo.uuid + material.uuid;
     if (!lotes.has(k)) lotes.set(k, { grupo, material, geos: [] });
     lotes.get(k).geos.push(g);
+  };
+  const muro = (grupo, material, x0, x1, y0, y1, z0, z1, uv) => {
+    if (!recep || (grupo !== piso1 && grupo !== piso2)) return caja(grupo, material, x0, x1, y0, y1, z0, z1, uv);
+    const corte = (grupo === piso2 ? H : 0) + HM;
+    if (y0 < corte) caja(grupo, material, x0, x1, y0, Math.min(y1, corte), z0, z1, uv);
+    if (y1 > corte) caja(altoDe(grupo), material, x0, x1, Math.max(y0, corte), y1, z0, z1, uv);
   };
 
   // --- suelo, plaza y patio
@@ -381,7 +390,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     // bloques de esquina (macizos)
     for (const [x0, x1, z0, z1] of [[-20, -15, -16, -10], [-15, -14, -16, -11], [15, 20, -16, -10], [14, 15, -16, -11],
       [-20, -15, 10, 16], [-15, -14, 11, 16], [15, 20, 10, 16], [14, 15, 11, 16]]) {
-      caja(g, mat.pared, x0, x1, y, y + HM, z0, z1);
+      muro(g, mat.pared, x0, x1, y, y + H, z0, z1);
     }
     // zócalo de color en las paredes de la galería
   }
@@ -451,12 +460,12 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
       const fijo = { x0, x1, z0, z1 }[lado];
       const a0 = enX ? x0 : z0, a1 = enX ? x1 : z1;
       const c0 = lado.endsWith('0') ? fijo : fijo - t, c1 = lado.endsWith('0') ? fijo + t : fijo;
-      const seg = (b0, b1, yy0, yy1, m = mat.pared) => enX ? caja(g, m, b0, b1, y + yy0, y + yy1, c0, c1) : caja(g, m, c0, c1, y + yy0, y + yy1, b0, b1);
-      if (!hueco) { seg(a0, a1, 0, HM); return; }
+      const seg = (b0, b1, yy0, yy1, m = mat.pared) => enX ? muro(g, m, b0, b1, y + yy0, y + yy1, c0, c1) : muro(g, m, c0, c1, y + yy0, y + yy1, b0, b1);
+      if (!hueco) { seg(a0, a1, 0, H); return; }
       const h0 = hueco.centro - hueco.ancho / 2, h1 = hueco.centro + hueco.ancho / 2;
-      seg(a0, h0, 0, HM); seg(h1, a1, 0, HM);
-      if (hueco.y1 < HM) seg(h0, h1, hueco.y1, HM);
-      if (hueco.y0 > 0) seg(h0, h1, 0, Math.min(hueco.y0, HM));
+      seg(a0, h0, 0, H); seg(h1, a1, 0, H);
+      seg(h0, h1, hueco.y1, H);
+      if (hueco.y0 > 0) seg(h0, h1, 0, hueco.y0);
       // zócalo de color del lado de la galería
       if (hueco.puerta) {
         const ext = lado.endsWith('0') ? -0.02 : 0.02;
@@ -476,15 +485,13 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     const v = lados.ventana, enX = v[0] === 'z';
     const fijo = { x0, x1, z0, z1 }[v], hacia = v.endsWith('0') ? -1 : 1;
     const cw = enX ? (x0 + x1) / 2 : (z0 + z1) / 2;
-    const plano = (a0, a1, yy0, yy1, d0, d1, m) => enX ? caja(g, m, a0, a1, y + yy0, y + yy1, fijo + d0 * hacia < fijo + d1 * hacia ? fijo + d0 * hacia : fijo + d1 * hacia, Math.max(fijo + d0 * hacia, fijo + d1 * hacia))
-      : caja(g, m, Math.min(fijo + d0 * hacia, fijo + d1 * hacia), Math.max(fijo + d0 * hacia, fijo + d1 * hacia), y + yy0, y + yy1, a0, a1);
-    if (!recep) {
+    const plano = (a0, a1, yy0, yy1, d0, d1, m) => enX ? muro(g, m, a0, a1, y + yy0, y + yy1, fijo + d0 * hacia < fijo + d1 * hacia ? fijo + d0 * hacia : fijo + d1 * hacia, Math.max(fijo + d0 * hacia, fijo + d1 * hacia))
+      : muro(g, m, Math.min(fijo + d0 * hacia, fijo + d1 * hacia), Math.max(fijo + d0 * hacia, fijo + d1 * hacia), y + yy0, y + yy1, a0, a1);
     plano(cw - .75, cw + .75, 1.0, 2.3, -.08, -.06, mat.vidrio);
     plano(cw - .85, cw + .85, 2.3, 2.45, -.02, .06, mColor);
     plano(cw - .85, cw + .85, .9, 1.0, -.02, .08, mColor);
     plano(cw - 1.55, cw - .8, 1.0, 2.3, .0, .05, mColor); // postigos abiertos
     plano(cw + .8, cw + 1.55, 1.0, 2.3, .0, .05, mColor);
-    }
     // zócalo exterior de color (característico de Salento)
     if (h.piso === 1) plano(enX ? x0 : z0, enX ? x1 : z1, 0, .85, .0, .04, mColor);
     if (h.piso === 2) { // balcón de madera
@@ -520,7 +527,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     if (h.ala === 'oeste') { pivote.position.set(P.x - .07, y, P.z + .53); pivote.rotation.y = Math.PI / 2; }
     if (h.ala === 'este') { pivote.position.set(P.x + .07, y, P.z - .53); pivote.rotation.y = -Math.PI / 2; }
     pivote.userData.giroBase = pivote.rotation.y;
-    g.add(pivote);
+    (recep ? altoDe(g) : g).add(pivote);
 
     // número de la habitación y farol junto a la puerta
     const placa = new THREE.Mesh(new THREE.PlaneGeometry(.5, .32),
@@ -533,7 +540,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     placa.position.set(base2.x, y + 1.6, base2.z);
     placa.rotation.y = { norte: 0, sur: Math.PI, oeste: Math.PI / 2, este: -Math.PI / 2 }[h.ala];
     farol.position.set(base2.x, y + 2.15, base2.z);
-    if (!recep) g.add(placa, farol); else pivote.visible = false;
+    (recep ? altoDe(g) : g).add(placa, farol);
 
     // volumen de riesgo (solo recepción) y halo de destino (solo huésped)
     const altoVol = recep ? 1.9 : H;
@@ -547,9 +554,9 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
   }
 
   // --- lobby: fachada, mostrador, letrero
-  const fachada = (x0, x1) => caja(piso1, mat.pared, x0, x1, 0, H, 15.86, 16);
+  const fachada = (x0, x1) => muro(piso1, mat.pared, x0, x1, 0, H, 15.86, 16);
   fachada(-10, -1.4); fachada(1.4, 10);
-  caja(piso1, mat.pared, -1.4, 1.4, 2.8, H, 15.86, 16);
+  muro(piso1, mat.pared, -1.4, 1.4, 2.8, H, 15.86, 16);
   caja(piso1, matColor('#7a2e1f'), -1.6, -1.4, 0, 2.9, 15.8, 16.1); caja(piso1, matColor('#7a2e1f'), 1.4, 1.6, 0, 2.9, 15.8, 16.1);
   caja(piso1, matColor('#7a2e1f'), -1.6, 1.6, 2.8, 3.0, 15.8, 16.1);
   for (const x of [-6, 6]) { // ventanales del lobby
@@ -558,16 +565,16 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     caja(piso1, matColor('#1f6fb2'), x - 1.75, x + 1.75, .0, .85, 15.99, 16.06);
   }
   // piso 2 sobre el lobby: fachada con balcón corrido (mirador)
-  caja(piso2, mat.pared, -10, 10, H, H + HM, 15.86, 16);
+  muro(piso2, mat.pared, -10, 10, H, 2 * H, 15.86, 16);
   caja(piso2, mat.madera, -8, 8, H - .1, H + .05, 16, 17);
   for (let x = -8; x <= 8; x += .3) caja(piso2, matColor('#b8312f'), x - .025, x + .025, H + .05, H + 1, 16.9, 16.95);
   caja(piso2, matColor('#b8312f'), -8, 8, H + .95, H + 1.05, 16.88, 16.98);
-  if (!recep) for (const x of [-6, -2, 2, 6]) caja(piso2, mat.vidrio, x - .7, x + .7, H + .2, H + 2.5, 15.82, 15.86);
+  for (const x of [-6, -2, 2, 6]) muro(piso2, mat.vidrio, x - .7, x + .7, H + .2, H + 2.5, 15.82, 15.86);
   // paredes laterales del lobby y salón
   for (const g of [piso1, piso2]) {
     const y = g === piso1 ? 0 : H;
-    caja(g, mat.pared, -10.12, -10, y, y + (g === piso1 && !recep ? H : HM), 11, 16);
-    caja(g, mat.pared, 10, 10.12, y, y + (g === piso1 && !recep ? H : HM), 11, 16);
+    muro(g, mat.pared, -10.12, -10, y, y + H, 11, 16);
+    muro(g, mat.pared, 10, 10.12, y, y + H, 11, 16);
   }
   // mostrador de recepción
   caja(piso1, mat.madera, 3, 8, 0, 1.1, 13.4, 14.6);
@@ -578,7 +585,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
   const letrero = new THREE.Mesh(new THREE.PlaneGeometry(7, 1.1), new THREE.MeshBasicMaterial({
     map: textoTextura([{ t: 'HOTEL VALLE DE COCORA', fuente: 'bold 70px Georgia, serif' }], { ancho: 1024, alto: 160, fondo: '#2f5d43', color: '#f6e7c1', borde: '#d4af37' }),
   }));
-  letrero.position.set(0, 3.25, 16.12); piso1.add(letrero);
+  letrero.position.set(0, 3.25, 16.12); (recep ? alto1 : piso1).add(letrero);
   const senal = (txt, x, y, z, ry, w = 2.6) => {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * .38), new THREE.MeshBasicMaterial({ map: textoTextura(txt, { ancho: 512, alto: 196, fondo: '#2f5d43', color: '#f6e7c1', borde: '#d4af37', fuente: 'bold 50px Georgia, serif' }), side: THREE.DoubleSide }));
     m.position.set(x, y, z); m.rotation.y = ry; piso1.add(m); return m;
@@ -690,7 +697,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     r.luz = new THREE.PointLight('#ffd08a', 0, 9, 1.6);
     r.luz.position.set(h.cx, h.y + 2.6, h.cz); r.grupo.add(r.luz);
   }
-  return { L, raiz, piso1, piso2, techo, exterior, habitaciones, abrirPuerta, animar, luzHabitacion, mat };
+  return { L, raiz, piso1, piso2, techo, exterior, altos: [alto1, alto2], habitaciones, abrirPuerta, animar, luzHabitacion, mat };
 }
 
 // Cielo con degradado y neblina de montaña

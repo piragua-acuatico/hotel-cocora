@@ -356,6 +356,7 @@ function ponerVista(v) {
   elev.objetivo = v === 'hotel' ? 0 : 1;
   hotel.exterior.children.forEach(o => { if (!o.userData.suelo) o.visible = v === 'hotel'; });
   hotel.techo.visible = v === 'hotel';
+  hotel.altos.forEach(g => { g.visible = v === 'hotel'; });
   controles.autoRotate = v === 'hotel'; controles.autoRotateSpeed = .6;
   for (const r of hotel.habitaciones.values()) r.vol.visible = v !== 'hotel';
   capa.style.display = v === 'hotel' ? 'none' : '';
