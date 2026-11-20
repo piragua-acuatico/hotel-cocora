@@ -43,7 +43,7 @@ export function crearLoro() {
     animar(dt, { posado = false } = {}) {
       t += dt;
       aleteo += ((posado ? 0 : 1) - aleteo) * Math.min(1, dt * 5);
-      const a = Math.sin(t * 18) * .9 * aleteo + (1 - aleteo) * -.15;
+      const a = Math.sin(t * 18) * .9 * aleteo + (1 - aleteo) * -1.25; // posado: alas plegadas junto al cuerpo
       alas.forEach(p => { p.rotation.z = p.userData.s * a; });
       cabeza.rotation.y = posado ? Math.sin(t * 1.7) * .5 : 0;
       cola.rotation.x = Math.PI / 2 + .25 + Math.sin(t * 3) * .06;

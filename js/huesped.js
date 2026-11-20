@@ -325,8 +325,9 @@ function actualizarGuia(dt) {
   const zona = zonaDe(yo);
   const dentro = zona === 'hab' && Math.abs(yo.y - habDatos.y) < 1;
   const d = dentro ? 0 : r.distancia;
-  modo = dentro ? 'adentro' : (d <= 3.0 && !puertaAbierta) ? 'puerta' : d <= UMBRAL ? 'cerca' : 'general';
-  if (puertaAbierta && d < 2.4) modo = 'adentro';
+  if (dentro || (puertaAbierta && d <= 6)) modo = 'adentro';
+  else if (d <= 3.0) modo = 'puerta';
+  else modo = d <= UMBRAL ? 'cerca' : 'general';
 
   if (modo !== modoPrevio) {
     if (modo === 'cerca' && modoPrevio === 'general') { sonido('loro'); vibrar([70, 50, 70]); avisar('🦜 ¡Sigue al loro orejiamarillo!'); aparecerLoro(); }
