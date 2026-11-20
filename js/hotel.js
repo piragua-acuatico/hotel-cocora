@@ -544,6 +544,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
     placa.position.set(base2.x, y + 1.6, base2.z);
     placa.rotation.y = { norte: 0, sur: Math.PI, oeste: Math.PI / 2, este: -Math.PI / 2 }[h.ala];
     farol.position.set(base2.x, y + 2.15, base2.z);
+    placa.userData.dinamico = farol.userData.dinamico = true;
     (recep ? altoDe(g) : g).add(placa, farol);
 
     // volumen de riesgo (solo recepción) y halo de destino (solo huésped)
@@ -698,6 +699,25 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta', somb
     t.position.set(x, 2.2, z); exterior.add(t);
     const tt = new THREE.Mesh(new THREE.CylinderGeometry(.2, .3, 2, 6), mat.madera); tt.position.set(x, 1, z); exterior.add(tt);
   }
+
+  // "Hornea" los objetos decorativos estáticos (palmas, árboles, montañas, nubes, flores, lámparas) en lotes:
+  // pasan de cientos de objetos a unos pocos, para que el celular dibuje mucho menos por cuadro.
+  const hornear = (grupo, filtro) => {
+    grupo.updateMatrixWorld(true);
+    const inv = new THREE.Matrix4().copy(grupo.matrixWorld).invert(), m4 = new THREE.Matrix4(), quitar = [];
+    grupo.traverse(o => {
+      if (!o.isMesh || !filtro(o) || o.material.transparent) return;
+      const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+      for (const n of Object.keys(g.attributes)) if (!['position', 'normal', 'uv'].includes(n)) g.deleteAttribute(n);
+      g.applyMatrix4(m4.multiplyMatrices(inv, o.matrixWorld));
+      const k = 'h' + grupo.uuid + o.material.uuid;
+      if (!lotes.has(k)) lotes.set(k, { grupo, material: o.material, geos: [] });
+      lotes.get(k).geos.push(g); quitar.push(o);
+    });
+    quitar.forEach(o => o.parent.remove(o));
+  };
+  hornear(exterior, o => !o.userData.suelo);
+  for (const g of [piso1, piso2]) hornear(g, o => o.parent === g && !o.userData.num && !o.userData.dinamico);
 
   // Fusiona geometrías estáticas por material
   for (const { grupo, material, geos } of lotes.values()) {
