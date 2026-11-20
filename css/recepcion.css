@@ -53,7 +53,7 @@ h1, h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; margin: 0; }
 .leyenda i { display: inline-block; width: 14px; height: 14px; border-radius: 4px; background: var(--c); margin-right: 8px; vertical-align: -2px; }
 .leyenda .nota { font-size: 11px; color: var(--suave); margin-top: 3px; }
 
-.toasts { position: absolute; top: 14px; right: 14px; display: grid; gap: 8px; width: min(380px, 60%); }
+.toasts { position: absolute; bottom: 14px; right: 14px; display: flex; flex-direction: column-reverse; gap: 8px; width: min(360px, 45%); }
 .toast { background: #fffdf6; color: #14231b; border-radius: 12px; padding: 12px 14px; box-shadow: 0 10px 30px #0007; font-size: 14px; animation: entra .35s ease-out; border-left: 6px solid var(--c, var(--oro)); }
 .toast b { display: block; font-size: 15px; margin-bottom: 2px; }
 @keyframes entra { from { transform: translateY(-10px); opacity: 0; } }
@@ -134,3 +134,10 @@ h1, h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; margin: 0; }
 .flujo .flecha-f { align-self: center; font-size: 22px; color: #b08a2e; font-weight: 700; }
 .como code { background: #fff; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
 .como > button { margin-top: 4px; }
+
+.celebracion { position: absolute; left: 50%; top: 76%; transform: translate(-50%, -50%); background: #0f5b32f2; color: #fff; border: 3px solid #d9b45a;
+  border-radius: 22px; padding: 22px 34px; text-align: center; box-shadow: 0 20px 60px #000a; animation: celebra .6s cubic-bezier(.2,1.4,.4,1); z-index: 5; pointer-events: none; }
+.celebracion .sello { width: 64px; height: 64px; margin: 0 auto 8px; border-radius: 50%; background: #fff; color: #0f5b32; font-size: 40px; font-weight: 800; display: grid; place-items: center; }
+.celebracion b { display: block; font-family: Fraunces, Georgia, serif; font-size: 30px; }
+.celebracion span { display: block; margin-top: 4px; font-size: 16px; opacity: .9; }
+@keyframes celebra { from { transform: translate(-50%, -50%) scale(.6); opacity: 0; } }

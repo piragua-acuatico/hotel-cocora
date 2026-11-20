@@ -351,10 +351,29 @@ sync.on('checkin', ({ t, hab }) => {
   pulso[hab] = 0;
   cambiar();
   aviso(`✅ ${escapar(a.nombre)} entró a la ${hab}`, 'Check-in y pago registrados. La habitación pasa a verde oscuro.', COLORES.checkin);
+  $('#cel-titulo').textContent = `${a.nombre} llegó a la ${hab}`;
+  $('#cel-sub').textContent = `Check-in y pago registrados · riesgo de cancelación: de ${fmtPct(pBase(hab))} a 0 %`;
+  $('#celebracion').hidden = false; confetiProyector();
+  clearTimeout(celebrar.t); celebrar.t = setTimeout(() => { $('#celebracion').hidden = true; }, 4500);
   sonido('exito');
   if (vista !== 'seguir') { seleccion = hab; pintar(); }
 });
 
+const celebrar = {};
+function pBase(num) { return probabilidad(reservaEscenario(mapa[num])); }
+function confetiProyector() {
+  const c = document.createElement('canvas'); const r = $('#escena').getBoundingClientRect();
+  c.width = r.width; c.height = r.height; c.style.cssText = 'position:absolute;inset:0;pointer-events:none;z-index:4';
+  $('#escena').appendChild(c);
+  const g = c.getContext('2d'), col = ['#d9b45a', '#5fd18a', '#0f5b32', '#ffffff', '#f2c230'];
+  const ps = Array.from({ length: 220 }, () => ({ x: c.width / 2 + (Math.random() - .5) * 200, y: c.height * .7, vx: (Math.random() - .5) * 16, vy: -6 - Math.random() * 10, c: col[Math.random() * 5 | 0], a: Math.random() * 6 }));
+  let n = 0;
+  (function f() {
+    g.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += .35; p.vx *= .99; p.a += .15; g.fillStyle = p.c; g.save(); g.translate(p.x, p.y); g.rotate(p.a); g.fillRect(-5, -3, 10, 6); g.restore(); });
+    if (n++ < 150) requestAnimationFrame(f); else c.remove();
+  })();
+}
 // Ruta punteada del huésped hasta su puerta
 const destinos = {};
 function actualizarRuta(t) {
