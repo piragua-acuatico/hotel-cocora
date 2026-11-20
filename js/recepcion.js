@@ -391,6 +391,8 @@ $('#btn-reiniciar').addEventListener('click', () => {
   sync.enviar('reinicio', {});
   cambiar(); seleccionar(null);
 });
+$('#btn-como').addEventListener('click', () => { $('#modal-como').hidden = false; });
+$('#modal-como').addEventListener('click', e => { if (e.target.dataset.cerrar !== undefined || e.target.id === 'modal-como') $('#modal-como').hidden = true; });
 $('#btn-completa').addEventListener('click', () => {
   if (document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen().catch(() => {});
 });
@@ -445,7 +447,8 @@ addEventListener('keydown', e => {
   if (e.key.toLowerCase() === 's') $('#btn-simular').click();
   if (e.key.toLowerCase() === 'r') $('#revelar').click();
   if (e.key.toLowerCase() === 'f') $('#btn-completa').click();
-  if (e.key === 'Escape') { $('#modal-qr').hidden = true; seleccionar(seleccion); }
+  if (e.key.toLowerCase() === 'h') $('#btn-como').click();
+  if (e.key === 'Escape') { $('#modal-qr').hidden = true; $('#modal-como').hidden = true; seleccionar(seleccion); }
 });
 
 // Selección por clic en el 3D

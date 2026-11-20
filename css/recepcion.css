@@ -124,3 +124,13 @@ h1, h2 { font-family: Fraunces, Georgia, serif; font-weight: 600; margin: 0; }
 @media (max-width: 1400px) { .kpi span { font-size: 10px; } .kpi b { font-size: 17px; } .marca p { font-size: 11.5px; } .principal { grid-template-columns: 1fr 360px; } .celular-sim { right: 380px; } }
 
 #p1-graf { width: 100%; height: 95px; display: block; margin: 2px 0 6px; }
+
+.modal .como { max-width: 980px; text-align: left; }
+.como h2 { margin-bottom: 12px; }
+.flujo { display: flex; gap: 10px; align-items: stretch; margin-bottom: 12px; }
+.flujo .paso { flex: 1; background: #f3ecdc; border-radius: 12px; padding: 12px; font-size: 13.5px; line-height: 1.45; }
+.flujo .paso > b { display: block; margin-bottom: 4px; color: #0f5b32; }
+.flujo .paso.ancho { flex: 1 1 50%; }
+.flujo .flecha-f { align-self: center; font-size: 22px; color: #b08a2e; font-weight: 700; }
+.como code { background: #fff; padding: 1px 5px; border-radius: 4px; font-size: 12.5px; }
+.como > button { margin-top: 4px; }
