@@ -50,7 +50,7 @@ if (SIN3D) {
     if (aB && aB.desde === a.desde) return;
     aB = a;
     const h = Lb.habitaciones.find(x => x.num === a.hab), r = mapaB[a.hab];
-    $('#bv-nombre').textContent = `¡Bienvenido, ${a.nombre}!`;
+    $('#bv-nombre').textContent = `¡Hola, ${a.nombre}!`;
     $('#bv-hab').textContent = a.hab;
     $('#bv-ubic').textContent = `${h.piso}.º piso · ${nombreAla[h.ala]}`;
     $('#bv-tipo').textContent = r ? r.tipo_habitacion : '—';
@@ -132,6 +132,7 @@ sync.on('estado', (e) => {
   }
   const nueva = !asignacion || asignacion.hab !== a.hab || asignacion.desde !== a.desde;
   asignacion = a;
+  if (nueva) checkinHecho = false;
   if (e.checkins && e.checkins[a.hab]) { checkinHecho = true; }
   if (nueva) prepararLlave(a);
 });
@@ -140,18 +141,22 @@ sync.on('reinicio', () => { try { localStorage.removeItem(CLAVE); } catch (e) { 
 $('#btn-demo').addEventListener('click', () => { estadoRecibido = true; prepararLlave({ hab: HAB_SUGERIDA, nombre: 'Huésped', desde: 0, demo: true }); });
 
 function prepararLlave(a) {
+  // si cambia de habitación, la puerta anterior vuelve a su estado normal
+  if (hab && hab !== a.hab) { const prev = hotel.habitaciones.get(hab); if (prev) prev.farol.material.emissiveIntensity = .25; }
+  puertaAbierta = false;
   hab = a.hab;
   habDatos = L.habitaciones.find(h => h.num === hab);
   destino = prepararDestino(L, hab);
   const r = mapa[hab];
-  $('#bv-nombre').textContent = `¡Bienvenido, ${a.nombre}!`;
+  $('#bv-nombre').textContent = `¡Hola, ${a.nombre}!`;
   $('#bv-hab').textContent = hab;
   $('#bv-ubic').textContent = `${habDatos.piso}.º piso · ${nombreAla[habDatos.ala]}`;
   $('#bv-tipo').textContent = r ? `${r.tipo_habitacion}${r.incluye_desayuno ? ' · con desayuno' : ''}` : '—';
   $('#bv-noches').textContent = r ? `${r.noches} noche${r.noches > 1 ? 's' : ''} · ${r.adultos + r.ninos} huésped${r.adultos + r.ninos > 1 ? 'es' : ''}` : '—';
   $('#guia-titulo').textContent = `Habitación ${hab} · ${habDatos.piso}.º piso, ${nombreAla[habDatos.ala]}`;
   $('#fin-hab').textContent = hab;
-  hotel.habitaciones.forEach(h => { h.farol.material = h.farol.material.clone(); });
+  const rh = hotel.habitaciones.get(hab);
+  if (!rh.farol.userData.propio) { rh.farol.material = rh.farol.material.clone(); rh.farol.userData.propio = true; }
   ponerNota(a.nombre);
 
   // ¿Vuelve a acercar la tarjeta? Retoma el recorrido donde iba (y abre la puerta si está frente a ella)
@@ -238,9 +243,9 @@ function ponerNota(nombre) {
   g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, 512, 360);
   g.strokeStyle = '#d9b45a'; g.lineWidth = 10; g.strokeRect(14, 14, 484, 332);
   g.fillStyle = '#2f5d43'; g.textAlign = 'center';
-  g.font = 'italic 34px Georgia, serif'; g.fillText('Bienvenido,', 256, 105);
+  g.font = 'italic 34px Georgia, serif'; g.fillText('Hola,', 256, 105);
   g.font = 'bold 46px Georgia, serif'; g.fillText(nombre.slice(0, 18), 256, 170);
-  g.font = '26px Georgia, serif'; g.fillStyle = '#6b5a3a'; g.fillText('Que disfrute el Valle de Cocora', 256, 235);
+  g.font = '26px Georgia, serif'; g.fillStyle = '#6b5a3a'; g.fillText('Te damos la bienvenida a Cocora', 256, 235);
   g.font = 'bold 22px Georgia, serif'; g.fillStyle = '#b8312f'; g.fillText('HOTEL VALLE DE COCORA · HAB. ' + hab, 256, 300);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   nota = new THREE.Group();
@@ -341,7 +346,7 @@ function actualizarGuia(dt) {
   if (modo === 'general') texto = instruccion(zona);
   else if (modo === 'cerca') texto = 'El loro te lleva a tu puerta';
   else if (modo === 'puerta') texto = 'Esta es tu puerta';
-  else texto = puertaAbierta ? '¡Bienvenido a tu habitación!' : 'Estás en tu habitación';
+  else texto = puertaAbierta ? '¡Llegaste a tu habitación!' : 'Estás en tu habitación';
   $('#guia-texto').textContent = texto;
 
   // flecha: hacia el siguiente punto del camino (o la puerta)
