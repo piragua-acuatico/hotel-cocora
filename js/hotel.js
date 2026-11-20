@@ -550,7 +550,7 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     vol.visible = false; vol.userData.num = h.num;
     g.add(vol);
 
-    return { datos: h, grupo: g, pivote, placa, farol, vol, abierta: false, apertura: 0 };
+    return { datos: h, grupo: g, pivote, placa, farol, vol, abierta: false, apertura: 0, cama: { x: dentro.x, y: y + .67, z: dentro.z, enX } };
   }
 
   // --- lobby: fachada, mostrador, letrero

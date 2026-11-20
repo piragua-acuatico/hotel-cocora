@@ -17,7 +17,7 @@ const CLAVE = 'cocora-recepcion-v1';
 const { modelo, noche, cifras } = await cargarModelo('');
 
 // ---------------------------------------------------------------- estado
-const inicial = () => ({ asignaciones: {}, checkins: {}, deposito: false, politica: false, extra: 0, revelar: false, v: 0 });
+const inicial = () => ({ asignaciones: {}, checkins: {}, deposito: false, politica: false, extra: 0, revelar: false, v: 0, actualizado: 0 });
 let estado = inicial();
 try { Object.assign(estado, JSON.parse(localStorage.getItem(CLAVE)) || {}); } catch (e) { /* nada */ }
 const guardar = () => { try { localStorage.setItem(CLAVE, JSON.stringify(estado)); } catch (e) { /* nada */ } };
@@ -267,8 +267,17 @@ sync.alCambiarConexion((ok, est) => {
   $('#conexion').lastElementChild.textContent = ok ? 'En línea' : est === 'INICIO' ? 'Conectando…' : 'Sin internet · solo local';
   $('#conexion').title = ok ? 'Conectado a Supabase Realtime: los celulares se sincronizan por internet' : 'Sin conexión a internet: funciona el celular simulado (tecla S) en este mismo computador';
 });
-function publicar() { sync.enviar('estado', { asignaciones: estado.asignaciones, checkins: estado.checkins, v: estado.v }); }
-function cambiar() { estado.v++; guardar(); publicar(); pintar(); }
+function publicar() { sync.enviar('estado', { asignaciones: estado.asignaciones, checkins: estado.checkins, v: estado.v, actualizado: estado.actualizado, origen: 'recepcion' }); }
+function cambiar() { estado.v++; estado.actualizado = Date.now(); guardar(); publicar(); pintar(); }
+// Si hay otra pantalla de recepción abierta, gana el estado modificado más recientemente (se sincronizan entre sí)
+sync.on('estado', (e) => {
+  if (e.origen !== 'recepcion') return;
+  if ((e.actualizado || 0) > (estado.actualizado || 0)) {
+    for (const num of Object.keys(estado.checkins)) if (!e.checkins[num]) hotel.abrirPuerta(num, false);
+    estado.asignaciones = e.asignaciones || {}; estado.checkins = e.checkins || {}; estado.actualizado = e.actualizado;
+    guardar(); pintar();
+  } else if ((e.actualizado || 0) < (estado.actualizado || 0)) publicar();
+});
 setInterval(publicar, 4000);
 
 const ultimoHola = {};
@@ -342,7 +351,7 @@ $('#revelar').addEventListener('click', () => { estado.revelar = !estado.revelar
 $('#btn-reiniciar').addEventListener('click', () => {
   if (!confirm('¿Reiniciar la demo? Se desactivan las llaves y se borran los check-in.')) return;
   for (const num of Object.keys(estado.checkins)) hotel.abrirPuerta(num, false);
-  estado = { ...inicial(), v: estado.v + 1 };
+  estado = { ...inicial(), v: estado.v + 1, actualizado: Date.now() };
   Object.keys(vivos).forEach(k => delete vivos[k]);
   Object.values(avatares).forEach(a => { a.visible = false; a.userData.iniciado = false; });
   Object.values(etqAvatar).forEach(e => { e.style.display = 'none'; });

@@ -71,7 +71,11 @@ const insistir = setInterval(() => { if (!estadoRecibido) hola(); }, 2500);
 setTimeout(() => { if (!estadoRecibido) { $('#carga-txt').textContent = 'Conectando con recepción…'; mostrar('p-inactiva'); $('#btn-demo').hidden = false; } }, 7000);
 $('#inactiva-num').textContent = `Llave ${T}`;
 
+let ultimoActualizado = 0;
 sync.on('estado', (e) => {
+  // con varias pantallas de recepción abiertas, solo cuenta el estado más reciente
+  if ((e.actualizado || 0) < ultimoActualizado) return;
+  ultimoActualizado = e.actualizado || 0;
   estadoRecibido = true;
   clearInterval(insistir);
   $('#btn-demo').hidden = true;
@@ -103,6 +107,7 @@ function prepararLlave(a) {
   $('#guia-titulo').textContent = `Habitación ${hab} · ${habDatos.piso}.º piso, ${nombreAla[habDatos.ala]}`;
   $('#fin-hab').textContent = hab;
   hotel.habitaciones.forEach(h => { h.farol.material = h.farol.material.clone(); });
+  ponerNota(a.nombre);
 
   // ¿Vuelve a acercar la tarjeta? Retoma el recorrido donde iba (y abre la puerta si está frente a ella)
   const s = leerSesion();
@@ -124,9 +129,10 @@ function prepararLlave(a) {
 }
 
 $('#btn-empezar').addEventListener('click', () => { desbloquearAudio(); empezar(false); });
-$('#btn-seguir').addEventListener('click', () => { mostrar(null); });
+$('#btn-seguir').addEventListener('click', () => { mostrar(null); avisar('🌺 Entra: hay una nota para ti en la cama'); });
 
 function empezar(retomar) {
+  if (!hab) return;
   mostrar(null);
   $('#hud').hidden = false;
   enRecorrido = true;
@@ -174,6 +180,37 @@ addEventListener('keydown', e => teclas.add(e.key.toLowerCase()));
 addEventListener('keyup', e => teclas.delete(e.key.toLowerCase()));
 addEventListener('blur', () => teclas.clear());
 
+// Nota de bienvenida personalizada sobre la cama, con pétalos
+let nota = null;
+function ponerNota(nombre) {
+  const r = hotel.habitaciones.get(hab); if (!r) return;
+  if (nota) { nota.parent.remove(nota); nota = null; }
+  const c = document.createElement('canvas'); c.width = 512; c.height = 360;
+  const g = c.getContext('2d');
+  g.fillStyle = '#fbf6ea'; g.fillRect(0, 0, 512, 360);
+  g.strokeStyle = '#d9b45a'; g.lineWidth = 10; g.strokeRect(14, 14, 484, 332);
+  g.fillStyle = '#2f5d43'; g.textAlign = 'center';
+  g.font = 'italic 34px Georgia, serif'; g.fillText('Bienvenido,', 256, 105);
+  g.font = 'bold 46px Georgia, serif'; g.fillText(nombre.slice(0, 18), 256, 170);
+  g.font = '26px Georgia, serif'; g.fillStyle = '#6b5a3a'; g.fillText('Que disfrute el Valle de Cocora', 256, 235);
+  g.font = 'bold 22px Georgia, serif'; g.fillStyle = '#b8312f'; g.fillText('HOTEL VALLE DE COCORA · HAB. ' + hab, 256, 300);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  nota = new THREE.Group();
+  const papel = new THREE.Mesh(new THREE.PlaneGeometry(.95, .67), new THREE.MeshBasicMaterial({ map: t }));
+  papel.rotation.x = -Math.PI / 2;
+  nota.add(papel);
+  const petalo = new THREE.MeshLambertMaterial({ color: '#c62f4a' });
+  for (let i = 0; i < 9; i++) {
+    const p = new THREE.Mesh(new THREE.SphereGeometry(.035, 6, 4), petalo);
+    p.scale.y = .3; p.position.set(Math.cos(i * 2.4) * (.6 + (i % 3) * .06), 0, Math.sin(i * 2.4) * (.42 + (i % 2) * .05)); nota.add(p);
+  }
+  const hacia = { norte: [0, 1], sur: [0, -1], oeste: [1, 0], este: [-1, 0] }[habDatos.ala];
+  nota.position.set(r.cama.x + hacia[0] * .35, r.cama.y + .01, r.cama.z + hacia[1] * .35);
+  // que el texto quede de frente a quien entra por la puerta
+  nota.rotation.y = { norte: 0, sur: Math.PI, oeste: Math.PI / 2, este: -Math.PI / 2 }[habDatos.ala];
+  r.grupo.add(nota);
+}
+
 // ---------------------------------------------------------------- puerta y check-in
 $('#btn-abrir').addEventListener('click', () => abrirPuerta());
 function abrirPuerta(silencioso = false) {
@@ -189,6 +226,7 @@ function abrirPuerta(silencioso = false) {
   setTimeout(() => sonido('exito'), 450);
   enviarCheckin();
   setTimeout(() => { mostrar('p-final'); confeti(); }, 1600);
+  setTimeout(() => avisar('🌺 Entra: hay una nota para ti en la cama'), 1200);
 }
 function enviarCheckin() {
   if (!asignacion || asignacion.demo) return;
@@ -226,6 +264,7 @@ function instruccion(zona) {
 
 let acumGuia = 0, acumPos = 0, ultimoEnvio = null, acumChirrido = 0;
 function actualizarGuia(dt) {
+  if (!destino || !habDatos) return;
   acumGuia += dt; if (acumGuia < .12) return; acumGuia = 0;
   const rr = ruta(L, destino, { x: yo.x, y: yo.y, z: yo.z }, abiertas);
   if (rr) ultimaRuta = rr;
