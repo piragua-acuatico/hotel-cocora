@@ -1,7 +1,8 @@
 // Configuración pública de la demo (la clave "publishable" de Supabase está hecha para ir en páginas web).
 export const SUPABASE_URL = 'https://jnycxjcpzjmpuxgwkyhp.supabase.co';
 export const SUPABASE_KEY = 'sb_publishable_W3lN7XHQqBVu3oLyf6kvew_HmwHc_Fa';
-export const CANAL = 'hotel-cocora-v1';
+// La versión publicada usa el canal real; las copias locales (pruebas o plan B sin internet) usan otro canal aparte
+export const CANAL = location.hostname.endsWith('github.io') ? 'hotel-cocora-v1' : 'hotel-cocora-local';
 export const URL_PUBLICA = 'https://piragua-acuatico.github.io/hotel-cocora/';
 export const TARJETAS = ['1', '2'];
 
