@@ -653,9 +653,11 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     palma(x, z, alto);
   }
   for (let i = 0; i < 26; i++) {
-    const a = i / 26 * Math.PI * 2 + azar() * .2, r = 170 + azar() * 50, alto = 40 + azar() * 55;
-    const m = new THREE.Mesh(new THREE.ConeGeometry(30 + azar() * 25, alto, 7, 2), i % 2 ? mat.montana : mat.montana2);
-    m.position.set(Math.cos(a) * r, alto / 2 - 2, Math.sin(a) * r); m.rotation.y = azar() * 3; exterior.add(m);
+    const a = i / 26 * Math.PI * 2 + azar() * .2, r = 175 + azar() * 50, alto = 38 + azar() * 42;
+    const geo = new THREE.SphereGeometry(1, 9, 6, 0, Math.PI * 2, 0, Math.PI / 2);
+    const m = new THREE.Mesh(geo, i % 2 ? mat.montana : mat.montana2);
+    m.scale.set(48 + azar() * 30, alto, 40 + azar() * 25);
+    m.position.set(Math.cos(a) * r, -2, Math.sin(a) * r); m.rotation.y = azar() * 3; exterior.add(m);
   }
   // árboles bajos alrededor del hotel
   for (let i = 0; i < 26; i++) {
@@ -708,5 +710,5 @@ export function ambiente(scene, { neblina = true } = {}) {
   g.fillStyle = gr; g.fillRect(0, 0, 2, 256);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
   scene.background = t;
-  if (neblina) scene.fog = new THREE.Fog('#dfe7e6', 40, 240);
+  if (neblina) scene.fog = new THREE.Fog('#dfe7e6', 50, 330);
 }

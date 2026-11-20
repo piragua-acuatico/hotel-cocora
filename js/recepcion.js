@@ -264,7 +264,8 @@ function asignar(t) {
 const sync = crearSync('recepcion');
 sync.alCambiarConexion((ok, est) => {
   $('#conexion').classList.toggle('ok', ok);
-  $('#conexion').lastElementChild.textContent = ok ? 'En línea · celulares conectados por internet' : est === 'INICIO' ? 'Conectando…' : 'Sin internet · modo local (simulación)';
+  $('#conexion').lastElementChild.textContent = ok ? 'En línea' : est === 'INICIO' ? 'Conectando…' : 'Sin internet · solo local';
+  $('#conexion').title = ok ? 'Conectado a Supabase Realtime: los celulares se sincronizan por internet' : 'Sin conexión a internet: funciona el celular simulado (tecla S) en este mismo computador';
 });
 function publicar() { sync.enviar('estado', { asignaciones: estado.asignaciones, checkins: estado.checkins, v: estado.v }); }
 function cambiar() { estado.v++; guardar(); publicar(); pintar(); }
