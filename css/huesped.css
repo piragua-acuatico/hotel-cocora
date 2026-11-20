@@ -71,3 +71,5 @@ button.sec { background: transparent; color: var(--crema); border: 1px solid #ff
 
 a.boton { display: block; margin: 10px 0; padding: 14px; border-radius: 14px; background: var(--oro); color: #22190a; font-weight: 700; text-decoration: none; }
 a.boton.sec { background: transparent; color: var(--crema); border: 1px solid #ffffff44; }
+
+@media (max-height: 700px) { .hoja-puerta { bottom: 158px; } .joystick { width: 112px; height: 112px; } #minimapa { width: 104px; height: 104px; } .ayuda { bottom: 146px; } }

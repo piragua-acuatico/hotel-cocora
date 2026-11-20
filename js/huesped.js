@@ -288,6 +288,7 @@ function actualizarGuia(dt) {
     modoPrevio = modo;
   }
   $('#hoja-puerta').hidden = !(modo === 'puerta');
+  if (modo === 'puerta') $('#ayuda').style.opacity = 0;
   $('#hp-titulo').textContent = `Estás frente a la ${hab}`;
   $('#guia-dist').textContent = Math.max(0, Math.round(d));
   let texto;
