@@ -195,7 +195,8 @@ export function ruta(L, destino, pos, abiertas) {
   let mejor = null;
   for (const n of L.nodos) {
     const dn = destino.dist.get(n.id);
-    if (!isFinite(dn) || Math.abs(n.y - pos.y) > 2.2) continue;
+    if (!isFinite(dn) || Math.abs(n.y - pos.y) > 4) continue;
+    if (n.zona === 'puerta') continue; // se llega a la puerta siempre de frente, pasando por el nodo de enfrente
     const d = Math.hypot(n.x - pos.x, n.z - pos.z, n.y - pos.y);
     if (d > 26) continue;
     const total = d + dn;
@@ -582,9 +583,9 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * .38), new THREE.MeshBasicMaterial({ map: textoTextura(txt, { ancho: 512, alto: 196, fondo: '#2f5d43', color: '#f6e7c1', borde: '#d4af37', fuente: 'bold 50px Georgia, serif' }), side: THREE.DoubleSide }));
     m.position.set(x, y, z); m.rotation.y = ry; piso1.add(m); return m;
   };
-  senal(['↑ Patio · Hab. 101–119', '← Escalera · 201–219'], 0, 2.6, 11.15, Math.PI, 3.2);
-  senal(['Recepción'], 5.5, 2.4, 14.75, Math.PI, 2);
-  const s2 = senal(['Hab. 201–219', '→ Galería'], -9.2, H + 2.4, 13.6, Math.PI, 2.4); piso1.remove(s2); piso2.add(s2);
+  senal(['↑ Patio · Hab. 101–119', '← Escalera · Hab. 201–219'], 0, 2.6, 11.15, 0, 3.4);
+  senal(['Recepción'], 5.5, 2.4, 13.3, 0, 2);
+  const s2 = senal(['Hab. 201–219', '↑ Galería'], -9.2, H + 2.5, 11.2, 0, 2.4); piso1.remove(s2); piso2.add(s2);
 
   // --- lámparas colgantes de la galería (puntos de luz cálida decorativos)
   const lampMat = new THREE.MeshLambertMaterial({ color: '#3a2a1a', emissive: '#ffbb55', emissiveIntensity: .6 });

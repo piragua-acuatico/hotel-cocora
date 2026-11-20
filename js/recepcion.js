@@ -465,4 +465,4 @@ pintar();
 publicar();
 cuadro();
 // Para pruebas desde la consola
-window.demo = { estado, mapa, hotel, L, sync, pintar, THREE, camara, controles, scene, avanzar: (s = 2) => { for (let i = 0; i < s * 30; i++) paso(1 / 30); } };
+window.demo = { get estado() { return estado; }, mapa, hotel, L, sync, pintar, THREE, camara, controles, scene, avanzar: (s = 2) => { for (let i = 0; i < s * 30; i++) paso(1 / 30); } };
