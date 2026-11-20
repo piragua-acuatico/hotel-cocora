@@ -174,7 +174,7 @@ function actualizarDecisiones() {
   const esPol = r => (r.canal === 'Booking' || r.canal === 'Airbnb') && r.politica_cancelacion === 'Flexible';
   const nPol = base.filter(esPol).length;
   const menosPol = sin(r => esPol(r) ? r.p - probabilidad({ ...r, politica_cancelacion: 'Moderada' }) : 0);
-  $('#p3-res').innerHTML = `${nPol} reservas Flexibles de Booking o Airbnb. Pasarlas a Moderada cambia las cancelaciones esperadas en ${fmt1(-menosPol)}. En el histórico, Booking cancela ${fmtPct(cifras.tasa_por_canal.Booking)} y pesa el ${fmtPct(cifras.share_perdido_booking)} del ingreso perdido.`;
+  $('#p3-res').innerHTML = `${nPol} reservas Flexibles de Booking o Airbnb. Pasarlas a Moderada ${menosPol >= 0 ? 'baja' : 'sube'} las cancelaciones esperadas en ${fmt1(Math.abs(menosPol))}. En el histórico, Booking cancela ${fmtPct(cifras.tasa_por_canal.Booking)} y pesa el ${fmtPct(cifras.share_perdido_booking)} del ingreso perdido.`;
   $('#esc-deposito').checked = estado.deposito; $('#esc-politica').checked = estado.politica;
 
   // Realidad
