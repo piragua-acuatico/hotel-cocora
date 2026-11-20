@@ -157,9 +157,12 @@ lienzo.addEventListener('pointerdown', e => {
   const sobreJoy = e.clientX > r.left - 30 && e.clientX < r.right + 30 && e.clientY > r.top - 30 && e.clientY < r.bottom + 30;
   if ((enJoy || sobreJoy) && joy.id === null) {
     joy.id = e.pointerId; joy.cx = r.left + r.width / 2; joy.cy = r.top + r.height / 2; moverJoy(e);
+    if (piloto.activo) { piloto.activo = false; actualizarLlevame(); }
   } else if (mirar.id === null) { mirar.id = e.pointerId; mirar.x = e.clientX; mirar.y = e.clientY; }
   lienzo.setPointerCapture(e.pointerId);
 });
+$('#btn-llevame').addEventListener('click', () => { piloto.activo = !piloto.activo; actualizarLlevame(); desbloquearAudio(); });
+function actualizarLlevame() { $('#btn-llevame').setAttribute('aria-pressed', piloto.activo); $('#btn-llevame').textContent = piloto.activo ? '⏸ Caminando solo…' : '🚶 Llévame'; }
 function moverJoy(e) {
   let dx = (e.clientX - joy.cx) / radio, dy = (e.clientY - joy.cy) / radio;
   const m = Math.hypot(dx, dy); if (m > 1) { dx /= m; dy /= m; }
@@ -289,6 +292,8 @@ function actualizarGuia(dt) {
   }
   $('#hoja-puerta').hidden = !(modo === 'puerta');
   if (modo === 'puerta') $('#ayuda').style.opacity = 0;
+  $('#btn-llevame').hidden = modo === 'puerta' || modo === 'adentro';
+  if ((modo === 'puerta' || modo === 'adentro') && piloto.activo) { piloto.activo = false; actualizarLlevame(); }
   $('#hp-titulo').textContent = `Estás frente a la ${hab}`;
   $('#guia-dist').textContent = Math.max(0, Math.round(d));
   let texto;

@@ -60,7 +60,7 @@ button.sec { background: transparent; color: var(--crema); border: 1px solid #ff
 .hoja-puerta { position: absolute; left: 12px; right: 12px; bottom: 170px; background: var(--crema); color: var(--texto); border-radius: 18px; padding: 14px; pointer-events: auto;
   box-shadow: 0 12px 40px #0008; animation: sube .3s ease-out; }
 .hoja-puerta p { margin: 0 0 10px; } .hoja-puerta b { display: block; font-size: 17px; } .hoja-puerta span { font-size: 13px; color: var(--suave); }
-.aviso { position: absolute; top: 100px; left: 50%; transform: translateX(-50%); background: #ffd23f; color: #1d2a22; font-weight: 700; padding: 10px 16px; border-radius: 999px;
+.aviso { position: absolute; top: 140px; left: 50%; transform: translateX(-50%); background: #ffd23f; color: #1d2a22; font-weight: 700; padding: 10px 16px; border-radius: 999px;
   box-shadow: 0 8px 24px #0006; white-space: nowrap; animation: sube .35s ease-out; font-size: 14.5px; }
 
 @media (min-width: 900px) {
@@ -73,3 +73,7 @@ a.boton { display: block; margin: 10px 0; padding: 14px; border-radius: 14px; ba
 a.boton.sec { background: transparent; color: var(--crema); border: 1px solid #ffffff44; }
 
 @media (max-height: 700px) { .hoja-puerta { bottom: 158px; } .joystick { width: 112px; height: 112px; } #minimapa { width: 104px; height: 104px; } .ayuda { bottom: 146px; } }
+
+.llevame { position: absolute; right: 12px; top: calc(max(12px, env(safe-area-inset-top)) + 84px); width: auto; padding: 10px 16px; border-radius: 999px;
+  font-size: 14px; background: #0f2a22d9; color: var(--crema); border: 1px solid #ffffff44; pointer-events: auto; box-shadow: 0 6px 18px #0006; }
+.llevame[aria-pressed="true"] { background: var(--oro); color: #22190a; border-color: var(--oro); }
