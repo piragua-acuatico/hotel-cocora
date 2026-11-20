@@ -140,7 +140,7 @@ function empezar(retomar) {
   mostrar(null);
   $('#hud').hidden = false;
   enRecorrido = true;
-  if (!retomar) Object.assign(yo, { x: 0, y: 0, z: 30, yaw: 0, pitch: -.03 });
+  if (!retomar) Object.assign(yo, { x: 0, y: 0, z: 33.5, yaw: 0, pitch: .04 });
   vuelo.t = 0; vuelo.activo = !retomar; vuelo.desde = camara.position.clone(); vuelo.qDesde = camara.quaternion.clone();
   setTimeout(() => { $('#ayuda').style.opacity = 0; }, 6000);
 }

@@ -62,6 +62,9 @@ export function crearLayout() {
   ];
   for (const piso of [1, 2]) for (const c of columnas()) obstaculos.push({ x: c.x, z: c.z, r: 0.32, y: (piso - 1) * H });
   for (const p of palmasPlaza()) obstaculos.push({ x: p.x, z: p.z, r: 0.6, y: 0 });
+  for (const x of [-2.4, 2.4]) obstaculos.push({ x, z: 17.6, r: .25, y: 0 });
+  for (const x of [-2.0, 2.0]) obstaculos.push({ x, z: 16.75, r: .45, y: 0 });
+  for (const x of [-6.5, 6.5]) obstaculos.push({ rect: [x - 1, x + 1, 19.6, 20.1], y: 0 });
 
   // Grafo de navegación
   const nodos = [], aristas = new Map();
@@ -109,7 +112,8 @@ export function columnas() {
 }
 
 function palmasPlaza() {
-  return [{ x: -9, z: 21, h: 17 }, { x: 9, z: 21, h: 19 }, { x: -17, z: 27, h: 22 }, { x: 18, z: 29, h: 21 }, { x: -5, z: 31, h: 24 }];
+  return [{ x: -9, z: 21, h: 17 }, { x: 9, z: 21, h: 19 }, { x: -17, z: 27, h: 22 }, { x: 18, z: 29, h: 21 }, { x: -6, z: 32, h: 24 },
+    { x: -2.8, z: 23.5, h: 15 }, { x: 2.8, z: 24.5, h: 18 }];
 }
 
 // ---------------------------------------------------------------- navegación
@@ -643,6 +647,33 @@ export function construirHotel(scene, { modo = 'huesped', calidad = 'alta' } = {
     p.position.set(x, 0, z); exterior.add(p);
   };
   for (const p of palmasPlaza()) palma(p.x, p.z, p.h);
+  // mobiliario de la plaza: faroles, materas con flores y bancas
+  const hierro = matColor('#22262a'), luzFarol = new THREE.MeshLambertMaterial({ color: '#fff3c4', emissive: '#ffcc66', emissiveIntensity: .8 });
+  for (const x of [-2.4, 2.4]) {
+    caja(exterior, hierro, x - .07, x + .07, 0, 3.2, 17.6 - .07, 17.6 + .07);
+    caja(exterior, hierro, x - .22, x + .22, 3.15, 3.25, 17.6 - .22, 17.6 + .22);
+    const f = new THREE.Mesh(new THREE.BoxGeometry(.32, .45, .32), luzFarol); f.position.set(x, 2.9, 17.6); exterior.add(f);
+  }
+  for (const x of [-2.0, 2.0]) {
+    const m = new THREE.Mesh(new THREE.CylinderGeometry(.42, .32, .6, 10), matColor('#b5532f')); m.position.set(x, .3, 16.75); exterior.add(m);
+    const b = new THREE.Mesh(new THREE.IcosahedronGeometry(.5, 0), matColor('#3c7a35')); b.position.set(x, .95, 16.75); exterior.add(b);
+    for (let i = 0; i < 6; i++) {
+      const fl = new THREE.Mesh(new THREE.IcosahedronGeometry(.11, 0), matColor(['#e84a6f', '#f2c230', '#ffffff'][i % 3]));
+      fl.position.set(x + Math.cos(i) * .4, 1.05 + (i % 2) * .25, 16.75 + Math.sin(i) * .4); exterior.add(fl);
+    }
+  }
+  for (const x of [-6.5, 6.5]) {
+    caja(exterior, mat.madera, x - 1, x + 1, .42, .5, 19.6, 20.1);
+    caja(exterior, mat.madera, x - 1, x + 1, .55, .95, 20.05, 20.12);
+    for (const dx of [-.85, .85]) caja(exterior, hierro, x + dx - .05, x + dx + .05, 0, .45, 19.65, 20.05);
+  }
+  // nubes
+  const nube = new THREE.MeshLambertMaterial({ color: '#ffffff', emissive: '#e8eef2', emissiveIntensity: .35, flatShading: true });
+  for (let i = 0; i < 14; i++) {
+    const g = new THREE.Group(), a = i / 14 * Math.PI * 2 + .3, r = 70 + (i % 4) * 25;
+    for (let j = 0; j < 4; j++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(6 + (j % 2) * 3, 0), nube); b.position.set(j * 7 - 10, (j % 2) * 2, (j % 3) * 3); b.scale.y = .55; g.add(b); }
+    g.position.set(Math.cos(a) * r, 55 + (i % 3) * 12, Math.sin(a) * r); g.rotation.y = a; exterior.add(g);
+  }
   const azar = (() => { let s = 7; return () => (s = (s * 16807) % 2147483647) / 2147483647; })();
   for (let i = 0; i < (calidad === 'alta' ? 70 : 34); i++) {
     const a = azar() * Math.PI * 2, r = 45 + azar() * 90;
