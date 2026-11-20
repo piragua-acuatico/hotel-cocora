@@ -57,8 +57,26 @@ function crearAvatar() {
   scene.add(g); return g;
 }
 const avatares = Object.fromEntries(TARJETAS.map(t => [t, crearAvatar()]));
-const lineaRuta = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineDashedMaterial({ color: '#ffe08a', dashSize: .8, gapSize: .5, depthTest: false, transparent: true }));
-lineaRuta.renderOrder = 10; lineaRuta.visible = false; scene.add(lineaRuta);
+// Ruta del huésped: "migas" luminosas que fluyen hacia su puerta
+const MAX_MIGAS = 160;
+const lineaRuta = new THREE.InstancedMesh(new THREE.SphereGeometry(.26, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffe08a', depthTest: false, transparent: true, opacity: .95 }), MAX_MIGAS);
+lineaRuta.renderOrder = 10; lineaRuta.visible = false; lineaRuta.count = 0; lineaRuta.frustumCulled = false; scene.add(lineaRuta);
+let rutaCruda = [];
+const mAux = new THREE.Matrix4();
+function dibujarMigas(t) {
+  if (!lineaRuta.visible || rutaCruda.length < 2) return;
+  let n = 0; const paso = .9, fase = (t * 1.6) % paso;
+  for (let i = 0; i < rutaCruda.length - 1 && n < MAX_MIGAS; i++) {
+    const a = rutaCruda[i], b = rutaCruda[i + 1];
+    const l = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+    for (let s = (i === 0 ? fase : 0); s < l && n < MAX_MIGAS; s += paso) {
+      const k = s / l, x = a.x + (b.x - a.x) * k, y = a.y + (b.y - a.y) * k, z = a.z + (b.z - a.z) * k;
+      const d = desp(y);
+      mAux.makeTranslation(x + d.x, y + .3 + d.y, z); lineaRuta.setMatrixAt(n++, mAux);
+    }
+  }
+  lineaRuta.count = n; lineaRuta.instanceMatrix.needsUpdate = true;
+}
 
 // ---------------------------------------------------------------- probabilidades y escenarios
 function reservaEscenario(r) {
@@ -267,7 +285,12 @@ sync.on('hola', ({ t }) => {
 });
 sync.on('pos', (d) => {
   const a = estado.asignaciones[d.t]; if (!a) return;
-  vivos[d.t] = { ...d, leida: true, t: Date.now() };
+  const previo = vivos[d.t] && vivos[d.t].modo;
+  vivos[d.t] = { ...(vivos[d.t] || {}), ...d, leida: true, t: Date.now() };
+  if (previo && previo !== d.modo) {
+    if (d.modo === 'cerca' && previo === 'general') { aviso(`🦜 ${escapar(a.nombre)} está a 30 m de su puerta`, 'Apareció el loro orejiamarillo y lo guía hasta la habitación.', '#2f9e44'); sonido('ping'); }
+    if (d.modo === 'puerta') aviso(`🚪 ${escapar(a.nombre)} llegó a la ${a.hab}`, 'Está frente a su puerta. Falta abrir con la llave.', COLORES.medio);
+  }
   const av = avatares[d.t];
   av.visible = true;
   av.userData.objetivo = new THREE.Vector3(d.x, d.y, d.z); av.userData.yaw = d.yaw;
@@ -297,10 +320,7 @@ function actualizarRuta(t) {
   destinos[a.hab] = destinos[a.hab] || prepararDestino(L, a.hab);
   const rr = ruta(L, destinos[a.hab], { x: v.x, y: v.y, z: v.z }, []);
   if (!rr) return;
-  const pts = rr.puntos.map(p => { const d = desp(p.y); return new THREE.Vector3(p.x + d.x, p.y + .25 + d.y, p.z); });
-  lineaRuta.geometry.dispose();
-  lineaRuta.geometry = new THREE.BufferGeometry().setFromPoints(pts);
-  lineaRuta.computeLineDistances();
+  rutaCruda = rr.puntos;
   lineaRuta.visible = vista !== 'hotel';
 }
 
@@ -431,6 +451,7 @@ function paso(dt) {
   }
   controles.update();
   hotel.animar(dt);
+  dibujarMigas(t);
   // volúmenes: opacidad y pulso del verde oscuro
   for (const [num, r] of hotel.habitaciones) {
     const m = r.vol.material;

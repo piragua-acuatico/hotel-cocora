@@ -54,6 +54,7 @@ let checkinHecho = false, puertaAbierta = false, enRecorrido = false;
 let modo = 'general', modoPrevio = null, ultimaRuta = null;
 const abiertas = [];
 const piloto = { activo: params.has('piloto') };
+const vuelo = { activo: false, t: 0, desde: null, qDesde: null };
 let estadoRecibido = false;
 
 function guardarSesion() {
@@ -130,6 +131,7 @@ function empezar(retomar) {
   $('#hud').hidden = false;
   enRecorrido = true;
   if (!retomar) Object.assign(yo, { x: 0, y: 0, z: 30, yaw: 0, pitch: -.03 });
+  vuelo.t = 0; vuelo.activo = !retomar; vuelo.desde = camara.position.clone(); vuelo.qDesde = camara.quaternion.clone();
   setTimeout(() => { $('#ayuda').style.opacity = 0; }, 6000);
 }
 
@@ -400,6 +402,15 @@ function avanzar(dt) {
     }
     camara.position.set(yo.x, yo.y + OJOS + Math.sin(paso) * .035, yo.z);
     camara.rotation.set(yo.pitch, yo.yaw, 0);
+    // vuelo de entrada: de la vista aérea a los ojos del huésped
+    if (vuelo.activo) {
+      vuelo.t += dt / 2.2;
+      const k = Math.min(1, vuelo.t), e = 1 - Math.pow(1 - k, 3);
+      const qFin = camara.quaternion.clone();
+      camara.position.lerpVectors(vuelo.desde, camara.position.clone(), e);
+      camara.quaternion.slerpQuaternions(vuelo.qDesde, qFin, e);
+      if (k >= 1) vuelo.activo = false;
+    }
     actualizarGuia(dt);
     animarLoro(dt, t);
     // haz de luz sobre la puerta cuando está cerca
@@ -434,4 +445,4 @@ function avanzar(dt) {
   renderer.render(scene, camara);
 }
 cuadro();
-window.demo = { piloto, yo, hotel, L, sync, get modo() { return modo; }, avanzar: (s = 1) => { for (let i = 0; i < s * 30; i++) avanzar(1 / 30); }, abrirPuerta };
+window.demo = { renderer, camara, piloto, yo, hotel, L, sync, get modo() { return modo; }, avanzar: (s = 1) => { for (let i = 0; i < s * 30; i++) avanzar(1 / 30); }, abrirPuerta };
