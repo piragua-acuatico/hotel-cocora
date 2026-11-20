@@ -14,6 +14,7 @@ button.sec { background: transparent; color: var(--crema); border: 1px solid #ff
 .pantalla { position: fixed; inset: 0; z-index: 10; display: grid; place-items: center; padding: 24px;
   background: radial-gradient(120% 80% at 50% 0%, #1f5240 0%, var(--verde) 60%); text-align: center; }
 .pantalla.transparente { background: #0f2a22aa; backdrop-filter: blur(3px); }
+#p-inactiva, #p-bienvenida { background: radial-gradient(120% 80% at 50% 0%, #1f5240cc 0%, #0f2a22e0 65%); }
 .centro { width: min(380px, 100%); }
 .centro p { color: #d6e3da; line-height: 1.45; }
 .chico { font-size: 13.5px; opacity: .85; }

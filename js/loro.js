@@ -47,6 +47,7 @@ export function crearLoro() {
       alas.forEach(p => { p.rotation.z = p.userData.s * a; });
       cabeza.rotation.y = posado ? Math.sin(t * 1.7) * .5 : 0;
       cola.rotation.x = Math.PI / 2 + .25 + Math.sin(t * 3) * .06;
+      brillo.visible = !posado;
       brillo.material.opacity = .1 + .07 * Math.sin(t * 4);
     },
   };
