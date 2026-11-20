@@ -3,7 +3,7 @@
 import * as THREE from './vendor/three.module.js';
 import { OrbitControls } from './vendor/OrbitControls.js';
 import { construirHotel, ambiente, H, prepararDestino, ruta } from './hotel.js';
-import { cargarModelo, probabilidad, nivel, factores, dinero, sobreventa } from './modelo.js';
+import { cargarModelo, probabilidad, nivel, factores, dinero, sobreventa, distribucionLlegadas } from './modelo.js';
 import { mapaHabitaciones, HAB_SUGERIDA, nombreAla } from './datos.js';
 import { crearSync } from './sync.js';
 import { COLORES, TARJETAS, URL_PUBLICA } from './config.js';
@@ -59,23 +59,29 @@ function crearAvatar() {
 const avatares = Object.fromEntries(TARJETAS.map(t => [t, crearAvatar()]));
 // Ruta del huésped: "migas" luminosas que fluyen hacia su puerta
 const MAX_MIGAS = 160;
-const lineaRuta = new THREE.InstancedMesh(new THREE.SphereGeometry(.26, 10, 8), new THREE.MeshBasicMaterial({ color: '#ffe08a', depthTest: false, transparent: true, opacity: .95 }), MAX_MIGAS);
-lineaRuta.renderOrder = 10; lineaRuta.visible = false; lineaRuta.count = 0; lineaRuta.frustumCulled = false; scene.add(lineaRuta);
-let rutaCruda = [];
+const COLOR_RUTA = { '1': '#ffe08a', '2': '#8fd3ff' };
+const rutas = Object.fromEntries(TARJETAS.map(t => {
+  const m = new THREE.InstancedMesh(new THREE.SphereGeometry(.26, 10, 8), new THREE.MeshBasicMaterial({ color: COLOR_RUTA[t] || '#ffe08a', depthTest: false, transparent: true, opacity: .95 }), MAX_MIGAS);
+  m.renderOrder = 10; m.visible = false; m.count = 0; m.frustumCulled = false; scene.add(m);
+  return [t, { mesh: m, puntos: [] }];
+}));
 const mAux = new THREE.Matrix4();
 function dibujarMigas(t) {
-  if (!lineaRuta.visible || rutaCruda.length < 2) return;
-  let n = 0; const paso = .9, fase = (t * 1.6) % paso;
-  for (let i = 0; i < rutaCruda.length - 1 && n < MAX_MIGAS; i++) {
-    const a = rutaCruda[i], b = rutaCruda[i + 1];
-    const l = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
-    for (let s = (i === 0 ? fase : 0); s < l && n < MAX_MIGAS; s += paso) {
-      const k = s / l, x = a.x + (b.x - a.x) * k, y = a.y + (b.y - a.y) * k, z = a.z + (b.z - a.z) * k;
-      const d = desp(y);
-      mAux.makeTranslation(x + d.x, y + .3 + d.y, z); lineaRuta.setMatrixAt(n++, mAux);
+  for (const r of Object.values(rutas)) {
+    const malla = r.mesh, cruda = r.puntos;
+    if (!malla.visible || cruda.length < 2) continue;
+    let n = 0; const paso = .9, fase = (t * 1.6) % paso;
+    for (let i = 0; i < cruda.length - 1 && n < MAX_MIGAS; i++) {
+      const a = cruda[i], b = cruda[i + 1];
+      const l = Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z);
+      for (let s = (i === 0 ? fase : 0); s < l && n < MAX_MIGAS; s += paso) {
+        const k = s / l, x = a.x + (b.x - a.x) * k, y = a.y + (b.y - a.y) * k, z = a.z + (b.z - a.z) * k;
+        const d = desp(y);
+        mAux.makeTranslation(x + d.x, y + .3 + d.y, z); malla.setMatrixAt(n++, mAux);
+      }
     }
+    malla.count = n; malla.instanceMatrix.needsUpdate = true;
   }
-  lineaRuta.count = n; lineaRuta.instanceMatrix.needsUpdate = true;
 }
 
 // ---------------------------------------------------------------- probabilidades y escenarios
@@ -150,6 +156,7 @@ function actualizarDecisiones() {
   for (let i = 0; i <= 15; i++) if (sobreventa(ps, i, pExtra, modelo.habitaciones).riesgo <= .05) sugerido = i;
   const s = sobreventa(ps, k, pExtra, modelo.habitaciones);
   $('#p1-valor').textContent = `+${k} reservas`;
+  graficaP1(ps, k, pExtra);
   $('#p1-res').innerHTML = `Se esperan <b>${fmt1(esperadas)}</b> cancelaciones de 38. Con <b>${k}</b> reservas extra:
     habitaciones vacías esperadas <b>${fmt1(s.vacias)}</b> · riesgo de dejar a alguien sin cuarto <b>${fmtPct(s.riesgo)}</b>.
     <br>Colchón prudente (riesgo ≤ 5 %): <b>+${sugerido}</b>.`;
@@ -181,6 +188,30 @@ function actualizarDecisiones() {
     $('#realidad').innerHTML = `Noche real del <b>${fechaLarga(noche.fecha)}</b>: el modelo esperaba <b>${fmt1(esperadoBase)}</b> cancelaciones y en la realidad se cancelaron <b>${reales}</b>.<br>
       Rojas: cancelaron <b>${ca} de ${ta}</b> · Amarillas: <b>${cm} de ${tm}</b> · Verdes: <b>${cb} de ${tb}</b>.`;
   } else $('#realidad').innerHTML = '';
+}
+// Gráfica P1: probabilidad de cada número de huéspedes que llegan (rojo = más que las 38 habitaciones)
+function graficaP1(ps, k, pExtra) {
+  const c = $('#p1-graf'); if (!c) return;
+  const g = c.getContext('2d'), W = c.width, Hh = c.height;
+  const llegar = ps.map(p => 1 - p).concat(Array(k).fill(1 - pExtra));
+  const d = distribucionLlegadas(llegar);
+  const cap = modelo.habitaciones, x0 = cap - 12, x1 = cap + 9;
+  const max = Math.max(...d.slice(x0, x1 + 1), .01);
+  g.clearRect(0, 0, W, Hh);
+  const ancho = (W - 20) / (x1 - x0 + 1), base = Hh - 26;
+  for (let n = x0; n <= x1; n++) {
+    const v = d[n] || 0, h = v / max * (base - 10);
+    g.fillStyle = n > cap ? '#e5483b' : n === cap ? '#5fd18a' : '#d9b45a';
+    g.globalAlpha = n > cap ? .95 : .85;
+    g.fillRect(10 + (n - x0) * ancho + 1, base - h, ancho - 2, h);
+  }
+  g.globalAlpha = 1;
+  const xc = 10 + (cap - x0 + 1) * ancho;
+  g.strokeStyle = '#ffffffcc'; g.setLineDash([4, 4]); g.beginPath(); g.moveTo(xc, 4); g.lineTo(xc, base); g.stroke(); g.setLineDash([]);
+  g.fillStyle = '#a9bdb2'; g.font = '22px Inter, sans-serif'; g.textAlign = 'center';
+  for (const n of [x0, cap - 8, cap - 4, cap, cap + 4, cap + 8]) g.fillText(n, 10 + (n - x0 + .5) * ancho, Hh - 4);
+  g.textAlign = 'right'; g.fillStyle = '#fff'; g.font = '600 20px Inter, sans-serif';
+  g.fillText(cap + ' habitaciones', xc - 6, 24); g.textAlign = 'left'; g.fillStyle = '#ff9b8f'; g.fillText('sin cuarto', xc + 6, 24);
 }
 const fechaLarga = f => new Date(f + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -245,7 +276,7 @@ $('#tarjetas').addEventListener('keydown', e => { if (e.key === 'Enter' && e.tar
 $('#tarjetas').addEventListener('click', e => {
   const t = e.target.dataset.asignar, d = e.target.dataset.desasignar;
   if (t) asignar(t);
-  if (d) { delete estado.asignaciones[d]; delete vivos[d]; avatares[d].visible = false; etqAvatar[d].style.display = 'none'; cambiar(); aviso(`Llave ${d} desactivada`, '', COLORES.libre); }
+  if (d) { delete estado.asignaciones[d]; delete vivos[d]; avatares[d].visible = false; rutas[d].mesh.visible = false; rutas[d].puntos = []; etqAvatar[d].style.display = 'none'; cambiar(); aviso(`Llave ${d} desactivada`, '', COLORES.libre); }
 });
 function asignar(t) {
   const hab = seleccion || HAB_SUGERIDA;
@@ -315,6 +346,7 @@ sync.on('checkin', ({ t, hab }) => {
   if (!a || a.hab !== hab || estado.checkins[hab]) { publicar(); return; }
   estado.checkins[hab] = Date.now();
   hotel.abrirPuerta(hab, true);
+  rutas[t].mesh.visible = false; rutas[t].puntos = [];
   pulso[hab] = 0;
   cambiar();
   aviso(`✅ ${escapar(a.nombre)} entró a la ${hab}`, 'Check-in y pago registrados. La habitación pasa a verde oscuro.', COLORES.checkin);
@@ -326,12 +358,12 @@ sync.on('checkin', ({ t, hab }) => {
 const destinos = {};
 function actualizarRuta(t) {
   const a = estado.asignaciones[t], v = vivos[t];
-  if (!a || !v || estado.checkins[a.hab]) { lineaRuta.visible = false; return; }
+  if (!a || !v || estado.checkins[a.hab]) { rutas[t].mesh.visible = false; return; }
   destinos[a.hab] = destinos[a.hab] || prepararDestino(L, a.hab);
   const rr = ruta(L, destinos[a.hab], { x: v.x, y: v.y, z: v.z }, []);
   if (!rr) return;
-  rutaCruda = rr.puntos;
-  lineaRuta.visible = vista !== 'hotel';
+  rutas[t].puntos = rr.puntos;
+  rutas[t].mesh.visible = vista !== 'hotel';
 }
 
 // ---------------------------------------------------------------- avisos
@@ -355,7 +387,7 @@ $('#btn-reiniciar').addEventListener('click', () => {
   Object.keys(vivos).forEach(k => delete vivos[k]);
   Object.values(avatares).forEach(a => { a.visible = false; a.userData.iniciado = false; });
   Object.values(etqAvatar).forEach(e => { e.style.display = 'none'; });
-  lineaRuta.visible = false; seleccion = null;
+  Object.values(rutas).forEach(r => { r.mesh.visible = false; }); seleccion = null;
   sync.enviar('reinicio', {});
   cambiar(); seleccionar(null);
 });
@@ -397,7 +429,7 @@ function ponerVista(v) {
   capa.style.display = v === 'hotel' ? 'none' : '';
   if (v === 'hotel') { camObjetivo.pos = new THREE.Vector3(48, 26, 58); camObjetivo.target = new THREE.Vector3(0, 4, 0); }
   if (v === 'explotada') { camObjetivo.target = new THREE.Vector3(SEPARA / 2, 0, 2); camObjetivo.pos = encuadre(); }
-  lineaRuta.visible = v !== 'hotel' && lineaRuta.visible;
+  Object.values(rutas).forEach(r => { r.mesh.visible = v !== 'hotel' && r.puntos.length > 1; });
 }
 document.querySelectorAll('.vistas button').forEach(b => b.addEventListener('click', () => ponerVista(b.dataset.vista)));
 // Atajos de teclado
