@@ -375,6 +375,7 @@ function actualizarGuia(dt) {
     if (modo === 'general') loro.grupo.visible = false;
     $('#guia').classList.toggle('cerca', modo !== 'general');
     modoPrevio = modo;
+    guardarSesion(); // así, si vuelve a acercar la tarjeta justo al llegar, la puerta se abre
   }
   $('#hoja-puerta').hidden = !(modo === 'puerta');
   if (modo === 'puerta') $('#ayuda').style.opacity = 0;
@@ -594,7 +595,7 @@ function avanzar(dt) {
       const clave = JSON.stringify(p);
       if (clave !== ultimoEnvio || Math.random() < .15) { sync.enviar('pos', p); ultimoEnvio = clave; }
     }
-    if (Math.random() < .02) guardarSesion();
+    if (Math.random() < .03 || (modo === 'puerta' && Math.random() < .2)) guardarSesion();
   } else {
     // fondo animado mientras se muestran las pantallas: vista aérea girando
     const a = t * .08;
