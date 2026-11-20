@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recepción · Hotel Valle de Cocora</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/recepcion.css">
+<script type="importmap">{ "imports": { "three": "./js/vendor/three.module.js" } }</script>
+<script src="js/vendor/supabase.js"></script>
+<script src="js/vendor/qrcode.js"></script>
+</head>
+<body>
+<header class="barra">
+  <div class="marca">
+    <svg viewBox="0 0 40 40" class="logo" aria-hidden="true"><path d="M20 4c-1 6-1 12 0 32" stroke="currentColor" stroke-width="2.2" fill="none"/><path d="M20 6c-5-2-10 0-12 4M20 6c5-2 10 0 12 4M20 6c-3 1-6 4-7 8M20 6c3 1 6 4 7 8M20 6c0-2 0-3 0-3" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    <div>
+      <h1>Hotel Valle de Cocora</h1>
+      <p id="subtitulo">Recepción · cargando…</p>
+    </div>
+  </div>
+  <div class="kpis" id="kpis"></div>
+  <div class="conexion" id="conexion"><span class="punto"></span><span>Conectando…</span></div>
+</header>
+
+<main class="principal">
+  <section class="escena" id="escena">
+    <canvas id="lienzo"></canvas>
+    <div id="etiquetas" class="etiquetas"></div>
+    <div class="vistas">
+      <button data-vista="hotel">1 · Hotel completo</button>
+      <button data-vista="explotada" class="activo">2 · Ocupación por piso</button>
+      <button data-vista="seguir">3 · Seguir al huésped</button>
+    </div>
+    <div class="leyenda">
+      <div><i style="--c:var(--checkin)"></i>Ya entró · pagó</div>
+      <div><i style="--c:var(--bajo)"></i>Riesgo bajo &lt; 15 %</div>
+      <div><i style="--c:var(--medio)"></i>Intermedio 15–30 %</div>
+      <div><i style="--c:var(--alto)"></i>Riesgo alto &gt; 30 %</div>
+      <div class="nota">Probabilidad de cancelar · regresión logística del EDA (AUC 0,776)</div>
+    </div>
+    <div class="toasts" id="toasts"></div>
+  </section>
+
+  <aside class="panel">
+    <section class="tarjeta-bloque">
+      <h2>Llaves NFC</h2>
+      <div id="tarjetas"></div>
+    </section>
+
+    <section class="detalle" id="detalle">
+      <p class="vacio">Toca una habitación para ver su reserva y por qué el modelo le asigna ese riesgo.</p>
+    </section>
+
+    <section class="decisiones">
+      <h2>Decisiones de la gerencia</h2>
+      <div class="decision">
+        <div class="titulo"><b>P1 · Sobreventa controlada</b><span id="p1-valor"></span></div>
+        <input type="range" id="extra" min="0" max="15" value="0" aria-label="Reservas extra aceptadas">
+        <div class="p1-res" id="p1-res"></div>
+      </div>
+      <label class="decision interruptor">
+        <input type="checkbox" id="esc-deposito">
+        <span><b>P2 · Pedir depósito solo al riesgo alto</b><small id="p2-res"></small></span>
+      </label>
+      <label class="decision interruptor">
+        <input type="checkbox" id="esc-politica">
+        <span><b>P3 · Booking y Airbnb: Flexible → Moderada</b><small id="p3-res"></small></span>
+      </label>
+      <button class="revelar" id="revelar">Revelar qué pasó en la realidad</button>
+      <div class="realidad" id="realidad"></div>
+    </section>
+
+    <footer class="pie">
+      <button id="btn-qr">Código QR de respaldo</button>
+      <button id="btn-simular">Simular celular</button>
+      <button id="btn-reiniciar" class="peligro">Reiniciar demo</button>
+    </footer>
+  </aside>
+</main>
+
+<div class="modal" id="modal-qr" hidden>
+  <div class="caja">
+    <h2>Llave de respaldo</h2>
+    <p>Si la tarjeta NFC falla, escanea este código con la cámara del celular.</p>
+    <div class="qrs" id="qrs"></div>
+    <button data-cerrar>Cerrar</button>
+  </div>
+</div>
+
+<div class="celular-sim" id="celular-sim" hidden>
+  <div class="marco"><iframe id="sim-frame" title="Celular simulado"></iframe></div>
+  <button class="cerrar-sim" data-cerrar-sim>Cerrar simulación</button>
+</div>
+
+<script type="module" src="js/recepcion.js"></script>
+</body>
+</html>
