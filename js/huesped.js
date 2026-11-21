@@ -511,6 +511,7 @@ function confeti() {
 const reloj = new THREE.Clock();
 let tiempo = 0, paso = 0;
 function redimensionar() {
+  if (innerWidth < 2 || innerHeight < 2) return;
   renderer.setSize(innerWidth, innerHeight, false);
   camara.aspect = innerWidth / innerHeight;
   camara.fov = camara.aspect < 1 ? 78 : 68;

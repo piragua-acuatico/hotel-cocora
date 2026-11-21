@@ -493,11 +493,13 @@ const reloj = new THREE.Clock();
 const v3 = new THREE.Vector3();
 function redimensionar() {
   const r = lienzo.parentElement.getBoundingClientRect();
+  if (r.width < 2 || r.height < 2) return; // ventana minimizada o aún sin tamaño
   renderer.setSize(r.width, r.height, false);
   camara.aspect = r.width / r.height; camara.updateProjectionMatrix();
   if (typeof vista !== 'undefined' && vista === 'explotada') camObjetivo.pos = encuadre();
 }
 addEventListener('resize', redimensionar); redimensionar();
+if ('ResizeObserver' in window) new ResizeObserver(redimensionar).observe(lienzo.parentElement);
 
 let tiempo = 0;
 function cuadro() {
@@ -515,6 +517,8 @@ function paso(dt) {
     const t1 = Object.keys(vivos).find(k => avatares[k].visible);
     if (t1) { const a = avatares[t1]; camObjetivo.target = a.position.clone(); camObjetivo.pos = a.position.clone().add(new THREE.Vector3(14, 22, 18)); }
   }
+  if (camObjetivo.pos && !Number.isFinite(camObjetivo.pos.x)) camObjetivo.pos = encuadre();
+  if (!Number.isFinite(camara.position.x)) camara.position.set(48, 26, 58);
   if (camObjetivo.pos) {
     const k = 1 - Math.exp(-dt * 2.2);
     camara.position.lerp(camObjetivo.pos, k); controles.target.lerp(camObjetivo.target, k);
